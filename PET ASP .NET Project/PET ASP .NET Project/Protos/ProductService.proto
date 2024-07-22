@@ -1,0 +1,21 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "ProductService";
+
+service ProductService
+{
+
+}
+
+message GetProsuctRequest
+{
+	int32 id;
+}
+
+message CreateProductRequest
+{
+	string name = 1;
+	string description = 2;
+	//decimal
+	int32 stock = 4;
+}
