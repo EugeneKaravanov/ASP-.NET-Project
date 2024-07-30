@@ -1,6 +1,6 @@
-﻿using PET_ASP_.NET_Project.Models;
+﻿using ProductService.Models;
 
-namespace PET_ASP_.NET_Project.Repositories
+namespace ProductService.Repositories
 {
     public interface IProductRepository
     {
@@ -8,7 +8,7 @@ namespace PET_ASP_.NET_Project.Repositories
 
         public bool GetProduct(int id, out Product product);
 
-        public void CreateProduct(string name, string description, decimal price, int stock);
+        public bool CreateProduct(string name, string description, decimal price, int stock);
 
         public bool UpdateProduct(int id, string name, string description, decimal price, int stock);
 

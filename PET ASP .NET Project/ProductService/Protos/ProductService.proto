@@ -1,0 +1,61 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "ProductService";
+
+import "google/type/money.proto";
+import "google/protobuf/empty.proto";
+
+service ProductService
+{
+	rpc GetProduct (GetProductRequest) returns (GetProductRespone);
+	rpc GetProducts (google.protobuf.empty) returns (GetProductsRespone);
+	rpc CreateProduct (CreateProductRequest) returns (OperationStatusResponse);
+	rpc UpdateProduct (UpdateProductRequest) returns (OperationStatusResponse);
+	rpc DeleteProduct (DeleteProductRequest) returns (OperationStatusResponse);
+}
+
+message GetProductRequest
+{
+	int32 id = 1;
+}
+
+message CreateProductRequest
+{
+	Product product = 1;
+}
+
+message UpdateProductRequest
+{
+	int32 id = 1;
+	Product product = 2;
+}
+
+message DeleteProductRequest
+{
+	int32 id = 1;
+	Product product = 2;
+}
+
+message GetProductRespone
+{
+	OperationStatusResponse status = 1;
+	Product products = 2;
+}
+	
+message GetProductsRespone
+{
+	repeated Product products = 1;
+}
+
+message OperationStatusResponse
+{
+	bool status = 1;
+}
+
+message Product
+{
+	string name = 1;
+	string description = 2;
+	google.protobuf.money price = 3;
+	int32 stock = 4;
+}

@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
-using PET_ASP_.NET_Project.Models;
+using ProductService.Models;
 
-namespace PET_ASP_.NET_Project.Validators
+namespace ProductService.Validators
 {
     public class ProductValidator : AbstractValidator<Product>
     {
