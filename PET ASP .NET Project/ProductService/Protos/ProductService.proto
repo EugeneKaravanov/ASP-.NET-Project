@@ -3,12 +3,12 @@
 option csharp_namespace = "ProductService";
 
 import "google/type/money.proto";
-import "google/protobuf/empty.proto";
+import "google/type/empty.proto";
 
 service ProductService
 {
 	rpc GetProduct (GetProductRequest) returns (GetProductRespone);
-	rpc GetProducts (google.protobuf.empty) returns (GetProductsRespone);
+	rpc GetProducts (google.type.empty) returns (GetProductsRespone);
 	rpc CreateProduct (CreateProductRequest) returns (OperationStatusResponse);
 	rpc UpdateProduct (UpdateProductRequest) returns (OperationStatusResponse);
 	rpc DeleteProduct (DeleteProductRequest) returns (OperationStatusResponse);
@@ -56,6 +56,6 @@ message Product
 {
 	string name = 1;
 	string description = 2;
-	google.protobuf.money price = 3;
+	google.type.money price = 3;
 	int32 stock = 4;
 }

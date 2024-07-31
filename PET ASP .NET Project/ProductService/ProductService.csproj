@@ -19,7 +19,8 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<Protobuf Include="Protos\ProductService.proto" GrpcServices="Server" />
+		<Protobuf Include="Protos\ProductService.proto" GrpcServices="Server" AdditionalImportDirs="Protos\googleapis" />
+		<Protobuf Include="Protos\googleapis\google\type\money.proto" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Services\" />
