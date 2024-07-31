@@ -19,7 +19,7 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<Protobuf Include="Protos\ProductService.proto" GrpcServices="Server" AdditionalImportDirs="Protos\googleapis" />
+		<Protobuf Include="Protos\ProductService.proto" GrpcServices="Service" AdditionalImportDirs="Protos\googleapis" />
 		<Protobuf Include="Protos\googleapis\google\type\money.proto" />
 	</ItemGroup>
 	<ItemGroup>
