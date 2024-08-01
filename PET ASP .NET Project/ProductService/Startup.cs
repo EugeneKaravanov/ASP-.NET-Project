@@ -1,5 +1,6 @@
-﻿using FluentValidation;
+﻿using Microsoft.AspNetCore.Builder;
 using ProductService.Repositories;
+using ProductService.Services;
 using ProductService.Validators;
 
 namespace ProductService
@@ -10,11 +11,16 @@ namespace ProductService
         {
             services.AddSingleton<IProductRepository, InMemoryProductRepository>();
             services.AddSingleton<ProductValidator>();
+            services.AddGrpc();
         }
 
         public void Configure(IApplicationBuilder app)
         {
-            app.MapGrpcService<>();
+            app.UseRouting();
+            app.UseEndpoints(endpoints => 
+            {
+                endpoints.MapGrpcService<ProductServiceGRPC>();
+            });
         }
-    }
+    } 
 }

@@ -1,7 +1,7 @@
 using ProductService;
 
-await Host
-    .CreateDefaultBuilder(args)
+await WebApplication
+    .CreateBuilder(args)
     .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>())
     .Build()
     .StartAsync();

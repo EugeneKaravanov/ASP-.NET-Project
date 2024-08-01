@@ -21,30 +21,30 @@ message GetProductRequest
 
 message CreateProductRequest
 {
-	Product product = 1;
+	ProductInfo product = 1;
 }
 
 message UpdateProductRequest
 {
 	int32 id = 1;
-	Product product = 2;
+	ProductInfo product = 2;
 }
 
 message DeleteProductRequest
 {
 	int32 id = 1;
-	Product product = 2;
+	ProductInfo product = 2;
 }
 
 message GetProductRespone
 {
 	OperationStatusResponse status = 1;
-	Product products = 2;
+	ProductInfo product = 2;
 }
 	
 message GetProductsRespone
 {
-	repeated Product products = 1;
+	repeated ProductInfo products = 1;
 }
 
 message OperationStatusResponse
@@ -52,7 +52,7 @@ message OperationStatusResponse
 	bool status = 1;
 }
 
-message Product
+message ProductInfo
 {
 	string name = 1;
 	string description = 2;
