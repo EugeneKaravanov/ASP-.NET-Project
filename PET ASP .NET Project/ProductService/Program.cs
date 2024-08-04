@@ -1,7 +1,21 @@
-using ProductService;
+using ProductService.Repositories;
+using ProductService.Validators;
+using ProductService.Services;
 
-await WebApplication
-    .CreateBuilder(args)
-    .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>())
-    .Build()
-    .StartAsync();
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSingleton<IProductRepository, InMemoryProductRepository>();
+builder.Services.AddSingleton<ProductValidator>();
+builder.Services.AddSingleton<ProductValidatorService>();
+builder.Services.AddGrpc();
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+
+app.UseRouting();
+app.MapGrpcService<ProductGRPCService>();
+app.Run();

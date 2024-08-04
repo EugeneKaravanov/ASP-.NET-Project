@@ -1,8 +1,15 @@
 using GatewayService;
 
-await Host
-    .CreateDefaultBuilder(args)
-    .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>())
-    .Build()
-    .StartAsync();
+var builder = WebApplication.CreateBuilder(args);
+
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+
+app.UseRouting();
+app.Run();
 
