@@ -7,7 +7,7 @@ namespace GatewayService.Controllers
         [HttpGet("products")]
         public void GetProducts()
         {
-
+            
         }
 
         [HttpGet("products/{id:int}")]

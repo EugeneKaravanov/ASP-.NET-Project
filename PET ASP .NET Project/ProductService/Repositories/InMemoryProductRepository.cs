@@ -14,12 +14,12 @@ namespace ProductService.Repositories
             _productValidator = productValidator;
         }
 
-        public List<Product> GetProducts()
+        public Dictionary<int, Product> GetProducts()
         {
-            List<Product> sendingProducts = new List<Product>();
+            Dictionary<int, Product> sendingProducts = new Dictionary<int, Product>();
 
-            for (int i = 0; i < _products.Count; i++)
-                sendingProducts.Add(_products[i]);
+            foreach (var product in _products)
+                sendingProducts.Add(product.Key, product.Value);
 
             return sendingProducts;
         }
@@ -38,33 +38,20 @@ namespace ProductService.Repositories
             return isFinded;
         }
 
-        public bool CreateProduct(string name, string description, decimal price, int stock)
+        public void CreateProduct(Product product)
         {
-            bool isAdded = false;
-            Product addingProduct = new Product(name, description, price, stock);
-
-            if(_productValidator.Validate(addingProduct).IsValid)
-            {
-                _products.Add(IdCounter++, addingProduct);
-                isAdded = true;
-            }
-
-            return isAdded;
+                _products.Add(IdCounter++, product);
         }
 
-        public bool UpdateProduct(int id, string name, string description, decimal price, int stock)
+        public bool UpdateProduct(int id, Product product)
         {
-            bool isUpdated = false;
-            Product changingProduct = new Product(name, description, price, stock);
-
             if (_products.ContainsKey(id))
-                if (_productValidator.Validate(changingProduct).IsValid)
-                {
-                    _products[id] = changingProduct;
-                    isUpdated = true;
-                }
+            {
+                _products[id] = product;
+                return true;
+            }
 
-            return isUpdated;
+            return false;
         }
 
         public bool DeleteProduct(int id)

@@ -1,11 +1,11 @@
 ﻿syntax = "proto3";
 
-option csharp_namespace = "ProductService";
+option csharp_namespace = "GatewayService";
 
 import "google/type/money.proto";
 import "google/protobuf/empty.proto";
 
-service ProductService 
+service GatewayService 
 {
   rpc GetProduct (GetProductRequest) returns (GetProductResponse);
   rpc GetProducts (google.protobuf.Empty) returns (GetProductsResponse);
