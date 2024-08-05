@@ -1,6 +1,6 @@
 ﻿syntax = "proto3";
 
-option csharp_namespace = "ProductService";
+option csharp_namespace = "Ecommerce";
 
 import "google/type/money.proto";
 import "google/protobuf/empty.proto";

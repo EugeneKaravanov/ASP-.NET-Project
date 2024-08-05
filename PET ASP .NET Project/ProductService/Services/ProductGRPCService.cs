@@ -1,11 +1,13 @@
-﻿using Google.Protobuf.Collections;
+﻿using Ecommerce;
+using Google.Protobuf.Collections;
 using Google.Type;
 using Grpc.Core;
 using Microsoft.AspNetCore.Mvc;
 using ProductService;
 using ProductService.Models;
 using ProductService.Repositories;
-using static ProductService.ProductService;
+using static Ecommerce.ProductService;
+using Status = Ecommerce.Status;
 
 namespace ProductService.Services
 {
