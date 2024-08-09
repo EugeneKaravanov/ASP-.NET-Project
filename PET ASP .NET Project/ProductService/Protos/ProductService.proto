@@ -58,7 +58,7 @@ message GetProductResponse
 message GetProductsResponse 
 {
     Status status = 1;
-    repeated ProductInfo products = 2;
+    repeated ProductInfoWithID products = 2;
 }
 
 message OperationStatusResponse 
@@ -73,6 +73,12 @@ message ProductInfo
   string description = 2;
   google.type.Money price = 3;
   int32 stock = 4;
+}
+
+message ProductInfoWithID
+{
+    int32 id = 1;
+    ProductInfo product = 2;
 }
 
 enum Status 

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProductService;
 using ProductService.Models;
 using ProductService.Repositories;
+using ProductService.Validators;
 using static Ecommerce.ProductService;
 using Status = Ecommerce.Status;
 
@@ -14,18 +15,17 @@ namespace ProductService.Services
     public class ProductGRPCService : ProductServiceBase
     {
         private readonly IProductRepository _productRepository;
-        private readonly ProductValidatorService _productValidatorService;
+        private readonly ProductValidator _productValidator;
 
-        public ProductGRPCService(IProductRepository productRepository, ProductValidatorService productValidatorService)
+        public ProductGRPCService(IProductRepository productRepository, ProductValidator productValidator)
         {
             _productRepository = productRepository;
-            _productValidatorService = productValidatorService;          
+            _productValidator = productValidator;          
         }
 
         public override async Task<GetProductResponse> GetProduct(GetProductRequest request, ServerCallContext context)
         {
             Product product;
-            Status status;
             ProductInfo productInfo = new ProductInfo();
 
             if (_productRepository.GetProduct(request.Id, out product))
@@ -57,12 +57,14 @@ namespace ProductService.Services
 
             foreach (var product in products)
             {
-                ProductInfo productInfo = new ProductInfo();
-                productInfo.Name = product.Value.Name;
-                productInfo.Description = product.Value.Description;
-                productInfo.Price = ConvertDecimalToMoney(product.Value.Price);
-                productInfo.Stock = product.Value.Stock;
-                response.Products.Add(productInfo);
+                ProductInfoWithID productInfoWithID = new ProductInfoWithID();
+
+                productInfoWithID.Id = product.Key;
+                productInfoWithID.Product.Name = product.Value.Name;
+                productInfoWithID.Product.Description = product.Value.Description;
+                productInfoWithID.Product.Price = ConvertDecimalToMoney(product.Value.Price);
+                productInfoWithID.Product.Stock = product.Value.Stock;
+                response.Products.Add(productInfoWithID);
             }
 
             return response;
@@ -72,7 +74,7 @@ namespace ProductService.Services
         {
             Product product = new Product(request.Product.Name, request.Product.Description, ConvertMoneyToDecimal(request.Product.Price), request.Product.Stock);
 
-            if (_productValidatorService.Validate(product))
+            if (_productValidator.Validate(product).IsValid)
             {
                 _productRepository.CreateProduct(product);
                 return new OperationStatusResponse() { Status = Status.Success, Message = "Продукт успешно добавлен!" };
@@ -87,7 +89,7 @@ namespace ProductService.Services
         {
             Product product = new Product(request.Product.Name, request.Product.Description, ConvertMoneyToDecimal(request.Product.Price), request.Product.Stock);
 
-            if (_productValidatorService.Validate(product))
+            if (_productValidator.Validate(product).IsValid)
             {
                 if (_productRepository.UpdateProduct(request.Id, product))
                     return new OperationStatusResponse() { Status = Status.Success, Message = "Продукт успешно обновлен!" };

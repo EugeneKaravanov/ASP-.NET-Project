@@ -6,7 +6,7 @@ namespace ProductService.Repositories
     public class InMemoryProductRepository : IProductRepository
     {
         private static int IdCounter = 0;
-        private Dictionary<int, Product> _products = new Dictionary<int, Product>();
+        private Dictionary<int, Product> _products = new Dictionary<int, Product>() { };
         private ProductValidator _productValidator;
 
         public InMemoryProductRepository(ProductValidator productValidator) 
@@ -40,7 +40,7 @@ namespace ProductService.Repositories
 
         public void CreateProduct(Product product)
         {
-                _products.Add(IdCounter++, product);
+            _products.Add(IdCounter++, product);
         }
 
         public bool UpdateProduct(int id, Product product)
