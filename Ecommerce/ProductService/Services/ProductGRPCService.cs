@@ -72,11 +72,17 @@ namespace ProductService.Services
 
         public override async Task<OperationStatusResponse> CreateProduct(CreateProductRequest request, ServerCallContext context)
         {
-            Product product = new Product(request.Product.Name, request.Product.Description, ConvertMoneyToDecimal(request.Product.Price), request.Product.Stock);
+            Product product = new Product();
+
+            product.Name = request.Product.Name;
+            product.Description = request.Product.Description;
+            product.Price = ConvertMoneyToDecimal(request.Product.Price);
+            product.Stock = request.Product.Stock;
 
             if (_productValidator.Validate(product).IsValid)
             {
                 _productRepository.CreateProduct(product);
+
                 return new OperationStatusResponse() { Status = Status.Success, Message = "Продукт успешно добавлен!" };
             }
             else
@@ -87,7 +93,12 @@ namespace ProductService.Services
 
         public override async Task<OperationStatusResponse> UpdateProduct(UpdateProductRequest request, ServerCallContext context)
         {
-            Product product = new Product(request.Product.Name, request.Product.Description, ConvertMoneyToDecimal(request.Product.Price), request.Product.Stock);
+            Product product = new Product();
+
+            product.Name = request.Product.Name;
+            product.Description = request.Product.Description;
+            product.Price = ConvertMoneyToDecimal(request.Product.Price);
+            product.Stock = request.Product.Stock;
 
             if (_productValidator.Validate(product).IsValid)
             {
