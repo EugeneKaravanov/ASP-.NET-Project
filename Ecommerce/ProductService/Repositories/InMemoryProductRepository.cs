@@ -40,7 +40,7 @@ namespace ProductService.Repositories
 
         public void CreateProduct(Product product)
         {
-            _products.Add(IdCounter++, product);
+            _products.Add(++IdCounter, product);
         }
 
         public bool UpdateProduct(int id, Product product)

@@ -5,12 +5,11 @@ var builder = WebApplication.CreateBuilder(args);
 var address = builder.Configuration.GetValue<string>("ProductServiceAddress");
 
 builder.Services.AddGrpcClient<Ecommerce.ProductService.ProductServiceClient>(address, options => { options.Address = new Uri(address); });
-builder.Services.AddMvc(options =>
+builder.Services.AddControllers(options =>
 {
     options.Filters.Add<CustomHeaderFilter>();
 });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();

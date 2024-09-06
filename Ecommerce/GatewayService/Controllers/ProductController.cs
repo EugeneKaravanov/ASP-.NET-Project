@@ -7,7 +7,6 @@ using ProductService.Models;
 
 namespace GatewayService.Controllers
 {
-    [ServiceFilter(typeof(CustomHeaderFilter))]
     public class ProductController : Controller
     {
         private readonly Ecommerce.ProductService.ProductServiceClient _productServiceClient;
@@ -69,15 +68,15 @@ namespace GatewayService.Controllers
         }
 
         [HttpPost("products")]
-        public async Task<IActionResult> CreateProduct([FromBody] string? name, [FromBody] string? description, [FromBody] decimal? price, [FromBody] int? stock)
+        public async Task<IActionResult> CreateProduct([FromBody] ProductDto productDto)
         {
             ProductInfo productInfo = new ProductInfo();
             OperationStatusDto result = new OperationStatusDto();
 
-            productInfo.Name = name;
-            productInfo.Description = description;
-            productInfo.Price = ConvertDecimalToMoney(price.GetValueOrDefault());
-            productInfo.Stock = stock.GetValueOrDefault();
+            productInfo.Name = productDto.Name;
+            productInfo.Description = productDto.Description;
+            productInfo.Price = ConvertDecimalToMoney(productDto.Price);
+            productInfo.Stock = productDto.Stock;
 
             var request = new CreateProductRequest { Product = productInfo };
             var response = await _productServiceClient.CreateProductAsync(request);
@@ -101,15 +100,15 @@ namespace GatewayService.Controllers
         }
 
         [HttpPut("products/{id:int}")]
-        public async Task<IActionResult> UpdateProduct(int id, [FromBody] string? name, [FromBody] string? description, [FromBody] decimal? price, [FromBody] int? stock)
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductDto productDto)
         {
             ProductInfo productInfo = new ProductInfo();
             OperationStatusDto result = new OperationStatusDto();
 
-            productInfo.Name = name;
-            productInfo.Description = description;
-            productInfo.Price = ConvertDecimalToMoney(price.GetValueOrDefault());
-            productInfo.Stock = stock.GetValueOrDefault();
+            productInfo.Name = productDto.Name;
+            productInfo.Description = productDto.Description;
+            productInfo.Price = ConvertDecimalToMoney(productDto.Price);
+            productInfo.Stock = productDto.Stock;
 
             var request = new UpdateProductRequest { Id = id, Product = productInfo };
             var response = await _productServiceClient.UpdateProductAsync(request);

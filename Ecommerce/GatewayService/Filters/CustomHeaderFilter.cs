@@ -2,16 +2,16 @@
 
 namespace GatewayService.Filters
 {
-    public class CustomHeaderFilter : IResultFilter
+    public class CustomHeaderFilter : IActionFilter
     {
-        public void OnResultExecuting(ResultExecutingContext context)
+        public void OnActionExecuting(ActionExecutingContext context)
         {
-            context.HttpContext.Response.Headers.Add("X-Developer-Name", "YourName");
+
         }
 
-        public void OnResultExecuted(ResultExecutedContext context)
+        public void OnActionExecuted(ActionExecutedContext context)
         {
-
+            context.HttpContext.Response.Headers.Add("X-Developer-Name", "YourName");
         }
     }
 }

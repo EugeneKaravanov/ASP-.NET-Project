@@ -60,6 +60,7 @@ namespace ProductService.Services
                 ProductInfoWithID productInfoWithID = new ProductInfoWithID();
 
                 productInfoWithID.Id = product.Key;
+                productInfoWithID.Product = new ProductInfo();
                 productInfoWithID.Product.Name = product.Value.Name;
                 productInfoWithID.Product.Description = product.Value.Description;
                 productInfoWithID.Product.Price = ConvertDecimalToMoney(product.Value.Price);
