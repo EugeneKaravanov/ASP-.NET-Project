@@ -66,5 +66,25 @@ namespace ProductService.Repositories
 
             return isDeleted;
         }
+
+        public void SortProducts(string argument, bool isReverse)
+        {
+            switch (argument)
+            {
+                case "Name":
+                    if (isReverse == false)
+                        _products = _products.OrderBy(product => product.Value.Name).ToDictionary(product => product.Key, product => product.Value);
+                    else
+                        _products = _products.OrderByDescending(product => product.Value.Name).ToDictionary(product => product.Key, product => product.Value);
+                    break;
+
+                case "Price":
+                    if (isReverse == false)
+                        _products = _products.OrderBy(product => product.Value.Price).ToDictionary(product => product.Key, product => product.Value);
+                    else
+                        _products = _products.OrderByDescending(product => product.Value.Price).ToDictionary(product => product.Key, product => product.Value);
+                    break;
+            }
+        }
     }
 }

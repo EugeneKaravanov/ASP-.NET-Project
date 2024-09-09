@@ -13,5 +13,7 @@ namespace ProductService.Repositories
         public bool UpdateProduct(int id, Product product);
 
         public bool DeleteProduct(int id);
+
+        public void SortProducts(string argument, bool isReverse);
     }
 }

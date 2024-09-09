@@ -12,6 +12,7 @@ service ProductService
   rpc CreateProduct (CreateProductRequest) returns (OperationStatusResponse);
   rpc UpdateProduct (UpdateProductRequest) returns (OperationStatusResponse);
   rpc DeleteProduct (DeleteProductRequest) returns (OperationStatusResponse);
+  rpc SortProducts (SortRequest) returns (OperationStatusResponse);
 }
 
 message GetProductRequest 
@@ -33,6 +34,12 @@ message UpdateProductRequest
 message DeleteProductRequest 
 {
   int32 id = 1;
+}
+
+message SortRequest
+{
+    string argument = 1;
+    bool is_revese = 2;
 }
 
 message GetProductResponse 

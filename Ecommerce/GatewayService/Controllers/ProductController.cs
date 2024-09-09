@@ -157,6 +157,32 @@ namespace GatewayService.Controllers
             }
         }
 
+        [HttpPost("products/sort")]
+        public async Task<IActionResult> SortProducts(SortRequestDto sortRequestDto)
+        {
+            OperationStatusDto result = new OperationStatusDto();
+
+            var request = new SortRequest { Argument = sortRequestDto.SortArgument, IsRevese = sortRequestDto.IsReverse };
+            var response = await _productServiceClient.SortProductsAsync(request);
+
+            result.Message = response.Message;
+
+            if (response.Status == Status.Success)
+            {
+                if (response.Status == Status.Success)
+                    result.Status = StatusDto.SUCCESS;
+
+                return Ok(result);
+            }
+            else
+            {
+                if (response.Status == Status.Failure)
+                    result.Status = StatusDto.FAILURE;
+
+                return BadRequest(result);
+            }
+        }
+
         private static Money ConvertDecimalToMoney(decimal value)
         {
             Money money = new Money();

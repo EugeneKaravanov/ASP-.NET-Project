@@ -2,8 +2,6 @@
 using Google.Protobuf.Collections;
 using Google.Type;
 using Grpc.Core;
-using Microsoft.AspNetCore.Mvc;
-using ProductService;
 using ProductService.Models;
 using ProductService.Repositories;
 using ProductService.Validators;
@@ -119,7 +117,26 @@ namespace ProductService.Services
             if (_productRepository.DeleteProduct(request.Id))
                 return new OperationStatusResponse() { Status = Status.Success, Message = "Продукт успешно удален!" };
             else
-                return new OperationStatusResponse() { Status = Status.Failure, Message = $"Продукт с ID {request.Id} отсутствует в базе данных" };
+                return new OperationStatusResponse() { Status = Status.Failure, Message = $"Продукт с ID {request.Id} отсутствует в базе данных!" };
+        }
+
+        public override async Task<OperationStatusResponse> SortProducts(SortRequest request, ServerCallContext context)
+        {
+            OperationStatusResponse response = new OperationStatusResponse();
+
+            if (request.Argument == "Name" || request.Argument == "Price")
+            {
+                _productRepository.SortProducts(request.Argument, request.IsRevese);
+                response.Status = Status.Success;
+                response.Message = $"Сортировка проведена успешно!";
+            }
+            else
+            {
+                response.Status = Status.Failure;
+                response.Message = $"Сортировка по атрибуту {request.Argument} невозможна!";
+            }
+
+            return response;
         }
 
         private static Money ConvertDecimalToMoney(decimal value)
