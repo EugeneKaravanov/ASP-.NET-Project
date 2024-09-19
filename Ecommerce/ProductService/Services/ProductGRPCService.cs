@@ -61,7 +61,7 @@ namespace ProductService.Services
 
             pagesCount = tempProducts.Count / request.ElementsOnPageCount;
 
-            if (pagesCount % request.ElementsOnPageCount > 0 || pagesCount == 0)
+            if (tempProducts.Count % request.ElementsOnPageCount > 0 || pagesCount == 0)
                 pagesCount++;
 
             if (request.CurrentPageNumber > pagesCount)
