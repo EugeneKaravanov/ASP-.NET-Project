@@ -1,10 +1,11 @@
 ﻿using ProductService.Models;
+using Ecommerce;
 
 namespace ProductService.Repositories
 {
     public interface IProductRepository
     {
-        public Dictionary<int, Product> GetProducts();
+        public List<ProductInfoWithID> GetProducts();
 
         public bool GetProduct(int id, out Product product);
 
@@ -13,7 +14,5 @@ namespace ProductService.Repositories
         public bool UpdateProduct(int id, Product product);
 
         public bool DeleteProduct(int id);
-
-        public void SortProducts(string argument, bool isReverse);
     }
 }

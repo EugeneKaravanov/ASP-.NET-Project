@@ -1,25 +1,20 @@
-﻿using ProductService.Models;
-using ProductService.Validators;
+﻿using Ecommerce;
+using ProductService.Models;
+using ProductService.Utilities;
 
 namespace ProductService.Repositories
 {
     public class InMemoryProductRepository : IProductRepository
     {
         private static int IdCounter = 0;
-        private Dictionary<int, Product> _products = new Dictionary<int, Product>() { };
-        private ProductValidator _productValidator;
+        private static readonly Dictionary<int, Product> _products = new Dictionary<int, Product>();
 
-        public InMemoryProductRepository(ProductValidator productValidator) 
+        public List<ProductInfoWithID> GetProducts()
         {
-            _productValidator = productValidator;
-        }
-
-        public Dictionary<int, Product> GetProducts()
-        {
-            Dictionary<int, Product> sendingProducts = new Dictionary<int, Product>();
+            List<ProductInfoWithID> sendingProducts = new List<ProductInfoWithID>();
 
             foreach (var product in _products)
-                sendingProducts.Add(product.Key, product.Value);
+                sendingProducts.Add(Mapper.TransferProductAndIdToProductInfoWithId(product.Key, product.Value));
 
             return sendingProducts;
         }
@@ -29,10 +24,10 @@ namespace ProductService.Repositories
             product = null;
             bool isFinded = false;
 
-            if (_products.ContainsKey(id))
+            if (_products.TryGetValue(id, out Product value))
             {
                 isFinded = true;
-                product = _products[id];
+                product = value;
             }
 
             return isFinded;
@@ -45,46 +40,25 @@ namespace ProductService.Repositories
 
         public bool UpdateProduct(int id, Product product)
         {
+            bool isUpdated = false;
+
             if (_products.ContainsKey(id))
             {
                 _products[id] = product;
-                return true;
+                isUpdated = true;
             }
 
-            return false;
+            return isUpdated;
         }
 
         public bool DeleteProduct(int id)
         {
             bool isDeleted = false;
 
-            if (_products.ContainsKey(id))
-            {
-                _products.Remove(id);
+            if (_products.Remove(id))
                 isDeleted = true;
-            }
 
             return isDeleted;
-        }
-
-        public void SortProducts(string argument, bool isReverse)
-        {
-            switch (argument)
-            {
-                case "Name":
-                    if (isReverse == false)
-                        _products = _products.OrderBy(product => product.Value.Name).ToDictionary(product => product.Key, product => product.Value);
-                    else
-                        _products = _products.OrderByDescending(product => product.Value.Name).ToDictionary(product => product.Key, product => product.Value);
-                    break;
-
-                case "Price":
-                    if (isReverse == false)
-                        _products = _products.OrderBy(product => product.Value.Price).ToDictionary(product => product.Key, product => product.Value);
-                    else
-                        _products = _products.OrderByDescending(product => product.Value.Price).ToDictionary(product => product.Key, product => product.Value);
-                    break;
-            }
         }
     }
 }

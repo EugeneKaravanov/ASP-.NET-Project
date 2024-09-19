@@ -2,7 +2,7 @@
 {
     public class SortRequestDto
     {
-        public string SortArgument {  get; set; }
+        public string SortArgument { get; set; }
         public bool IsReverse { get; set; }
     }
 }

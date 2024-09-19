@@ -1,9 +1,8 @@
 ﻿using Ecommerce;
-using Google.Protobuf.Collections;
-using Google.Type;
 using Grpc.Core;
 using ProductService.Models;
 using ProductService.Repositories;
+using ProductService.Utilities;
 using ProductService.Validators;
 using static Ecommerce.ProductService;
 using Status = Ecommerce.Status;
@@ -18,98 +17,130 @@ namespace ProductService.Services
         public ProductGRPCService(IProductRepository productRepository, ProductValidator productValidator)
         {
             _productRepository = productRepository;
-            _productValidator = productValidator;          
+            _productValidator = productValidator;
         }
 
         public override async Task<GetProductResponse> GetProduct(GetProductRequest request, ServerCallContext context)
         {
             Product product;
-            ProductInfo productInfo = new ProductInfo();
+            GetProductResponse response = new GetProductResponse();
 
             if (_productRepository.GetProduct(request.Id, out product))
             {
                 GetProductResponse.Types.ProductFound foundedResult = new GetProductResponse.Types.ProductFound();
-                productInfo.Name = product.Name;
-                productInfo.Description = product.Description;
-                productInfo.Price = ConvertDecimalToMoney(product.Price);
-                productInfo.Stock = product.Stock;
-                foundedResult.Product = productInfo;
 
-                return new GetProductResponse() { Status = Status.Success, Found = foundedResult };
+                foundedResult.Product = Mapper.TransferProductToProdutctInfo(product);
+                response.Found = foundedResult;
+
+                return response;
             }
             else
             {
                 GetProductResponse.Types.ProductNotFound notFoundedResult = new GetProductResponse.Types.ProductNotFound();
 
-                notFoundedResult.Message = $"Продукт с ID {request.Id} отсутствует в базе данных"; 
-                return new GetProductResponse() { Status = Status.Failure, NotFound = notFoundedResult };
+                notFoundedResult.Message = $"Продукт с ID {request.Id} отсутствует в базе данных";
+                response.NotFound = notFoundedResult;
+
+                return response;
             }
         }
 
-        public override async Task<GetProductsResponse> GetProducts(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
+        public override async Task<GetProductsWithPaginationResponse> GetProducts(GetProductsWithPaginationRequest request, ServerCallContext context)
         {
-            Dictionary<int, Product> products = _productRepository.GetProducts();
-            GetProductsResponse response = new GetProductsResponse();
+            List<ProductInfoWithID> tempProducts = _productRepository.GetProducts();
+            GetProductsWithPaginationResponse response = new GetProductsWithPaginationResponse();
 
-            response.Status = Status.Success;
+            int firstElementNumberOnChoosenPage;
+            int lastElementNumberOnChoosenPage;
+            int currentPageNumber;
+            int elementsOnCurrentPage;
+            int pagesCount;
 
-            foreach (var product in products)
-            {
-                ProductInfoWithID productInfoWithID = new ProductInfoWithID();
+            if (request.ElementsOnPageCount < 1)
+                request.ElementsOnPageCount = 1;
 
-                productInfoWithID.Id = product.Key;
-                productInfoWithID.Product = new ProductInfo();
-                productInfoWithID.Product.Name = product.Value.Name;
-                productInfoWithID.Product.Description = product.Value.Description;
-                productInfoWithID.Product.Price = ConvertDecimalToMoney(product.Value.Price);
-                productInfoWithID.Product.Stock = product.Value.Stock;
-                response.Products.Add(productInfoWithID);
-            }
+            pagesCount = tempProducts.Count / request.ElementsOnPageCount;
+
+            if (pagesCount % request.ElementsOnPageCount > 0 || pagesCount == 0)
+                pagesCount++;
+
+            if (request.CurrentPageNumber > pagesCount)
+                currentPageNumber = pagesCount;
+            else if (request.CurrentPageNumber <= 1)
+                currentPageNumber = 1;
+            else
+                currentPageNumber = request.CurrentPageNumber;
+
+            if (currentPageNumber < pagesCount && request.ElementsOnPageCount >= tempProducts.Count)
+                elementsOnCurrentPage = request.ElementsOnPageCount;
+            else if (currentPageNumber < pagesCount && request.ElementsOnPageCount <= tempProducts.Count)
+                elementsOnCurrentPage = tempProducts.Count;
+            else
+                elementsOnCurrentPage = tempProducts.Count % request.ElementsOnPageCount;
+
+            firstElementNumberOnChoosenPage = (currentPageNumber - 1) * request.ElementsOnPageCount + 1;
+
+            if (tempProducts.Count - (firstElementNumberOnChoosenPage - 1) >= request.ElementsOnPageCount)
+                lastElementNumberOnChoosenPage = firstElementNumberOnChoosenPage + request.ElementsOnPageCount - 1;
+            else
+                lastElementNumberOnChoosenPage = tempProducts.Count;
+
+            response.AllElementsCount = tempProducts.Count;
+            response.CurrentPageNumber = currentPageNumber;
+            response.ElementsOnCurentPageCount = elementsOnCurrentPage;
+
+            for (int i = firstElementNumberOnChoosenPage - 1; i < lastElementNumberOnChoosenPage; i++)
+                response.Products.Add(tempProducts[i]);
 
             return response;
         }
 
         public override async Task<OperationStatusResponse> CreateProduct(CreateProductRequest request, ServerCallContext context)
         {
-            Product product = new Product();
-
-            product.Name = request.Product.Name;
-            product.Description = request.Product.Description;
-            product.Price = ConvertMoneyToDecimal(request.Product.Price);
-            product.Stock = request.Product.Stock;
+            Product product = Mapper.TransferProductInfoToProduct(request.Product);
+            OperationStatusResponse response = new OperationStatusResponse();
 
             if (_productValidator.Validate(product).IsValid)
             {
                 _productRepository.CreateProduct(product);
+                response.Status = Status.Success;
+                response.Message = "Продукт успешно добавлен!";
 
-                return new OperationStatusResponse() { Status = Status.Success, Message = "Продукт успешно добавлен!" };
+                return response;
             }
             else
             {
-                return new OperationStatusResponse() { Status = Status.Failure, Message = "Продукт не прошел валидацию!" };
+                response.Status = Status.Failure;
+                response.Message = "Продукт не прошел валидацию!";
+
+                return response;
             }
         }
 
         public override async Task<OperationStatusResponse> UpdateProduct(UpdateProductRequest request, ServerCallContext context)
         {
-            Product product = new Product();
+            Product product = Mapper.TransferProductInfoToProduct(request.Product);
+            OperationStatusResponse response = new OperationStatusResponse();
 
-            product.Name = request.Product.Name;
-            product.Description = request.Product.Description;
-            product.Price = ConvertMoneyToDecimal(request.Product.Price);
-            product.Stock = request.Product.Stock;
-
-            if (_productValidator.Validate(product).IsValid)
+            if (_productValidator.Validate(product).IsValid == false)
             {
-                if (_productRepository.UpdateProduct(request.Id, product))
-                    return new OperationStatusResponse() { Status = Status.Success, Message = "Продукт успешно обновлен!" };
-                else
-                    return new OperationStatusResponse() { Status = Status.Failure, Message = $"Продукт с ID {request.Id} отсутствует в базе данных" };
+                response.Status = Status.Failure;
+                response.Message = $"Не удалось получить продукт с ID {request.Id}!";
+                return response;
+            }
+
+            if (_productRepository.UpdateProduct(request.Id, product))
+            {
+                response.Status = Status.Success;
+                response.Message = "Продукт успешно обновлен!";
             }
             else
             {
-                return new OperationStatusResponse() { Status = Status.Failure, Message = "Продукт не прошел валидацию!" };
+                response.Status = Status.Failure;
+                response.Message = $"Не удалось получить продукт с ID {request.Id}!";
             }
+
+            return response;
         }
 
         public override async Task<OperationStatusResponse> DeleteProduct(DeleteProductRequest request, ServerCallContext context)
@@ -120,41 +151,71 @@ namespace ProductService.Services
                 return new OperationStatusResponse() { Status = Status.Failure, Message = $"Продукт с ID {request.Id} отсутствует в базе данных!" };
         }
 
-        public override async Task<OperationStatusResponse> SortProducts(SortRequest request, ServerCallContext context)
+        public override async Task<GetSortedProductsResponse> GetSortedProducts(GetSortedProductsRequest request, ServerCallContext context)
         {
-            OperationStatusResponse response = new OperationStatusResponse();
+            List<ProductInfoWithID> products = _productRepository.GetProducts();
+            GetSortedProductsResponse response = new GetSortedProductsResponse();
 
-            if (request.Argument == "Name" || request.Argument == "Price")
+            if (request.Argument != "Name" && request.Argument != "Price")
             {
-                _productRepository.SortProducts(request.Argument, request.IsRevese);
-                response.Status = Status.Success;
-                response.Message = $"Сортировка проведена успешно!";
+                GetSortedProductsResponse.Types.FailureSort failureSort = new GetSortedProductsResponse.Types.FailureSort();
+
+                failureSort.Message = $"Сортировка по параметру {request.Argument} не возможна или продукт не имет данного параметра.";
+                response.FailureSort = failureSort;
+
+                return response;
             }
-            else
+
+            switch (request.Argument)
             {
-                response.Status = Status.Failure;
-                response.Message = $"Сортировка по атрибуту {request.Argument} невозможна!";
+                case "Name":
+                    if (request.IsRevese == false)
+                        products = products.OrderBy(product => product.Name).ToList();
+                    else
+                        products = products.OrderByDescending(product => product.Name).ToList();
+                    break;
+
+                case "Price":
+                    if (request.IsRevese == false)
+                        products = products.OrderBy(product => Converter.ConvertMoneyToDecimal(product.Price)).ToList();
+                    else
+                        products = products.OrderByDescending(product => Converter.ConvertMoneyToDecimal(product.Price)).ToList();
+                    break;
             }
+
+            GetSortedProductsResponse.Types.SuccessSort successSort = new GetSortedProductsResponse.Types.SuccessSort();
+
+            foreach (var product in products)
+            {
+                successSort.Products.Add(product);
+            }
+
+            response.SuccessSort = successSort;
 
             return response;
         }
 
-        private static Money ConvertDecimalToMoney(decimal value)
+        public override async Task<GetProductsResponse> GetFiltredProducts(FilterProductsRequest request, ServerCallContext context)
         {
-            Money money = new Money();
+            List<ProductInfoWithID> products = _productRepository.GetProducts();
+            GetProductsResponse response = new GetProductsResponse();
 
-            money.Units = (long)value;
-            money.Nanos = (int)(value % 1);
-            money.CurrencyCode = "RUB";
+            if (request.Name != null)
+                products = products.Where(product => product.Name.Contains(request.Name) == true).ToList();
 
-            return money;
-        }
+            if (request.MinPrice.HasValue)
+                products = products.Where(product => Converter.ConvertMoneyToDecimal(product.Price) >= request.MinPrice).ToList();
 
-        private static decimal ConvertMoneyToDecimal(Money money)
-        {
-            decimal price = money.Units + money.Nanos;
+            if (request.MaxPrice.HasValue)
+                products = products.Where(product => Converter.ConvertMoneyToDecimal(product.Price) <= request.MaxPrice).ToList();
 
-            return price;
+
+            foreach (var product in products)
+            {
+                response.Products.Add(product);
+            }
+
+            return response;
         }
     }
 }

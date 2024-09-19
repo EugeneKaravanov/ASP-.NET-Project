@@ -10,11 +10,5 @@ builder.Services.AddGrpc();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
-
-app.UseRouting();
 app.MapGrpcService<ProductGRPCService>();
 app.Run();

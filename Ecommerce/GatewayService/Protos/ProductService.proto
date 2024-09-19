@@ -4,20 +4,28 @@ option csharp_namespace = "Ecommerce";
 
 import "google/type/money.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
 
 service ProductService 
 {
   rpc GetProduct (GetProductRequest) returns (GetProductResponse);
-  rpc GetProducts (google.protobuf.Empty) returns (GetProductsResponse);
+  rpc GetProducts (GetProductsWithPaginationRequest) returns (GetProductsWithPaginationResponse);
   rpc CreateProduct (CreateProductRequest) returns (OperationStatusResponse);
   rpc UpdateProduct (UpdateProductRequest) returns (OperationStatusResponse);
   rpc DeleteProduct (DeleteProductRequest) returns (OperationStatusResponse);
-  rpc SortProducts (SortRequest) returns (OperationStatusResponse);
+  rpc GetSortedProducts (GetSortedProductsRequest) returns (GetSortedProductsResponse);
+  rpc GetFiltredProducts (FilterProductsRequest) returns (GetProductsResponse);
 }
 
 message GetProductRequest 
 {
   int32 id = 1;
+}
+
+message GetProductsWithPaginationRequest
+{
+    int32 elements_on_page_count = 1;
+    int32 current_page_number = 2;
 }
 
 message CreateProductRequest 
@@ -36,19 +44,25 @@ message DeleteProductRequest
   int32 id = 1;
 }
 
-message SortRequest
+message GetSortedProductsRequest
 {
     string argument = 1;
     bool is_revese = 2;
 }
 
+message FilterProductsRequest
+{
+    google.protobuf.StringValue name = 1;
+    google.protobuf.UInt32Value min_price = 2;
+    google.protobuf.UInt32Value max_price = 3;
+}
+
 message GetProductResponse 
 {
-  Status status = 1;
   oneof result 
   {
-    ProductFound found = 2;
-    ProductNotFound not_found = 3;
+    ProductFound found = 1;
+    ProductNotFound not_found = 2;
   }
 
   message ProductFound 
@@ -64,8 +78,34 @@ message GetProductResponse
 
 message GetProductsResponse 
 {
-    Status status = 1;
-    repeated ProductInfoWithID products = 2;
+    repeated ProductInfoWithID products = 1;
+}
+
+message GetProductsWithPaginationResponse
+{
+    int32 all_elements_count = 1;
+    int32 current_page_number = 2;
+    int32 elements_on_curent_page_count = 3;
+    repeated ProductInfoWithID products = 4;
+}
+
+message GetSortedProductsResponse
+{
+    oneof result 
+    {
+        SuccessSort success_sort = 1;
+        FailureSort failure_sort = 2;
+    }
+
+    message SuccessSort
+    {
+        repeated ProductInfoWithID products = 1;
+    }
+
+    message FailureSort
+    {
+        string message = 1;
+    }
 }
 
 message OperationStatusResponse 
@@ -85,7 +125,10 @@ message ProductInfo
 message ProductInfoWithID
 {
     int32 id = 1;
-    ProductInfo product = 2;
+    string name = 2;
+    string description = 3;
+    google.type.Money price = 4;
+    int32 stock = 5;
 }
 
 enum Status 
