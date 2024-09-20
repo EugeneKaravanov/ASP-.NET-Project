@@ -1,13 +1,14 @@
 ﻿using Ecommerce;
 using ProductService.Models;
 using ProductService.Utilities;
+using System.Collections.Concurrent;
 
 namespace ProductService.Repositories
 {
     public class InMemoryProductRepository : IProductRepository
     {
         private static int IdCounter = 0;
-        private static readonly Dictionary<int, Product> _products = new Dictionary<int, Product>();
+        private readonly Dictionary<int, Product> _products = new Dictionary<int, Product>();
 
         public List<ProductInfoWithID> GetProducts()
         {
