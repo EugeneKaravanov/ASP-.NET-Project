@@ -13,7 +13,7 @@ namespace ProductService.Repositories
         {
             int totalElementsCount = GetProductsCountAfterFiltration(request.NameFilter, request.MinPriceFilter, request.MaxPriceFilter);
             int elementsOnPageCount = request.ElementsOnPageCount > 0 ? request.ElementsOnPageCount : 1;
-            int totalPagesCount = totalElementsCount % elementsOnPageCount == 0 ? totalElementsCount / elementsOnPageCount : totalElementsCount / elementsOnPageCount + 1;
+            int totalPagesCount = (int)Math.Ceiling(totalElementsCount / (double)elementsOnPageCount);
             int choosenPageNumber;
             IEnumerable<KeyValuePair<int, Product>> productsRequest;
             Dictionary<int, Product> productsDictionary = new Dictionary<int, Product>();
