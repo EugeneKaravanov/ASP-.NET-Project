@@ -19,7 +19,6 @@ namespace GatewayService.Controllers
         public async Task<PageDto<ProductWithIdDto>> GetProducts(Models.GetProductsRequestDto getProductsRequestDto)
         {
             GetProductsRequest request = Mapper.TransferGetProductsRequestDtoToGetProductsRequest(getProductsRequestDto);
-            int i = 1;
             GetProductsResponse response = await _productServiceClient.GetProductsAsync(request);
 
             PageDto<ProductWithIdDto> pageDto = Mapper.TransferPageGRPCToPageDto(response.Page);

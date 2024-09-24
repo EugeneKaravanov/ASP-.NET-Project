@@ -22,19 +22,20 @@ namespace ProductService.Repositories
 
             if (request.ChoosenPageNumber < 1)
                 choosenPageNumber = 1;
-            else if (request.ChoosenPageNumber > totalElementsCount)
+            else if (request.ChoosenPageNumber > totalPagesCount)
                 choosenPageNumber = totalPagesCount;
             else choosenPageNumber = request.ChoosenPageNumber;
 
-            productsRequest = _products.
-                Where(product => request.NameFilter == null || product.Value.Name.Contains(request.NameFilter)).
-                Where(product => request.MinPriceFilter.HasValue == false || product.Value.Price >= request.MinPriceFilter).
-                Where(product => request.MaxPriceFilter.HasValue == false || product.Value.Price <= request.MaxPriceFilter);
+            productsRequest = _products
+                .Where(product => request.NameFilter == null || product.Value.Name.Contains(request.NameFilter))
+                .Where(product => request.MinPriceFilter.HasValue == false || product.Value.Price >= request.MinPriceFilter)
+                .Where(product => request.MaxPriceFilter.HasValue == false || product.Value.Price <= request.MaxPriceFilter);
             productsRequest = GetProductsAfterSorting(productsRequest, request.SortArgument, request.IsReverseSort);
-            productsDictionary = productsRequest.
-                Skip(elementsOnPageCount * (choosenPageNumber - 1)).
-                Take(elementsOnPageCount).ToDictionary();
-            products = productsDictionary.Select(product => Mapper.TansferProductAndIdToProductWithId(product.Key, product.Value)).ToList();
+            products = productsRequest
+                .Skip(elementsOnPageCount * (choosenPageNumber - 1))
+                .Take(elementsOnPageCount)
+                .Select(product => Mapper.TansferProductAndIdToProductWithId(product.Key, product.Value))
+                .ToList();
             page = new Page<ProductWithId>(totalElementsCount, totalPagesCount, choosenPageNumber, elementsOnPageCount, products);
 
             return page;

@@ -7,7 +7,7 @@
         public string? NameFilter { get; set; }
         public int? MinPriceFilter { get; set; }
         public int? MaxPriceFilter { get; set; }
-        public string SortArgument { get; set; }
+        public string? SortArgument { get; set; }
         public bool IsReverseSort { get; set; }
     }
 }

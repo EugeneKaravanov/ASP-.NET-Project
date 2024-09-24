@@ -1,6 +1,7 @@
 ﻿using Ecommerce;
 using GatewayService.Models;
 using ProductService.Models;
+using ProductService;
 
 namespace GatewayService.Utilities
 {

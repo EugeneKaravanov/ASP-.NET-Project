@@ -14,10 +14,8 @@
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.0" />
   </ItemGroup>
-
-	<ItemGroup>
-		<Protobuf Include="Protos\ProductService.proto" GrpcServices="Client" AdditionalImportDirs="Protos\googleapis" />
-		<Protobuf Include="Protos\googleapis\google\type\money.proto" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ProductService\ProductService.csproj" />
+  </ItemGroup>
 
 </Project>
