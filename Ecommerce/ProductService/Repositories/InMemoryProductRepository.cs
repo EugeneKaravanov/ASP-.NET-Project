@@ -15,6 +15,7 @@ namespace ProductService.Repositories
             int elementsOnPageCount = request.ElementsOnPageCount > 0 ? request.ElementsOnPageCount : 1;
             int totalPagesCount = totalElementsCount % elementsOnPageCount == 0 ? totalElementsCount / elementsOnPageCount : totalElementsCount / elementsOnPageCount + 1;
             int choosenPageNumber;
+            IEnumerable<KeyValuePair<int, Product>> productsRequest;
             Dictionary<int, Product> productsDictionary = new Dictionary<int, Product>();
             List<ProductWithId> products = new List<ProductWithId>();
             Page<ProductWithId> page;
@@ -22,17 +23,17 @@ namespace ProductService.Repositories
             if (request.ChoosenPageNumber < 1)
                 choosenPageNumber = 1;
             else if (request.ChoosenPageNumber > totalElementsCount)
-                choosenPageNumber = totalElementsCount;
+                choosenPageNumber = totalPagesCount;
             else choosenPageNumber = request.ChoosenPageNumber;
 
-            productsDictionary = _products.
+            productsRequest = _products.
                 Where(product => request.NameFilter == null || product.Value.Name.Contains(request.NameFilter)).
                 Where(product => request.MinPriceFilter.HasValue == false || product.Value.Price >= request.MinPriceFilter).
-                Where(product => request.MinPriceFilter.HasValue == false || product.Value.Price <= request.MinPriceFilter).
-                Skip(elementsOnPageCount * choosenPageNumber - 1).
-                Take(elementsOnPageCount).
-                ToDictionary();
-            productsDictionary = GetProductsAfterSorting(productsDictionary, request.SortArgument, request.IsReverseSort);
+                Where(product => request.MaxPriceFilter.HasValue == false || product.Value.Price <= request.MaxPriceFilter);
+            productsRequest = GetProductsAfterSorting(productsRequest, request.SortArgument, request.IsReverseSort);
+            productsDictionary = productsRequest.
+                Skip(elementsOnPageCount * (choosenPageNumber - 1)).
+                Take(elementsOnPageCount).ToDictionary();
             products = productsDictionary.Select(product => Mapper.TansferProductAndIdToProductWithId(product.Key, product.Value)).ToList();
             page = new Page<ProductWithId>(totalElementsCount, totalPagesCount, choosenPageNumber, elementsOnPageCount, products);
 
@@ -92,7 +93,7 @@ namespace ProductService.Repositories
             return count;
         }
 
-        private Dictionary<int, Product> GetProductsAfterSorting(Dictionary<int, Product> products, string sortArgument, bool isReverseSort)
+        private IEnumerable<KeyValuePair<int, Product>> GetProductsAfterSorting(IEnumerable<KeyValuePair<int, Product>> products, string sortArgument, bool isReverseSort)
         {
             if (sortArgument != "Name" && sortArgument != "Price")
             {
@@ -103,16 +104,15 @@ namespace ProductService.Repositories
             {
                 case "Name":
                     if (isReverseSort == false)
-                        products = products.OrderBy(product => product.Value.Name).ToDictionary();
-                    else
-                        products = products.OrderByDescending(product => product.Value.Name).ToDictionary();
+                        products = products.OrderBy(product => product.Value.Name);
+                    products = products.OrderByDescending(product => product.Value.Name);
                     break;
 
                 case "Price":
                     if (isReverseSort == false)
-                        products = products.OrderBy(product => product.Value.Price).ToDictionary();
+                        products = products.OrderBy(product => product.Value.Price);
                     else
-                        products = products.OrderByDescending(product => product.Value.Price).ToDictionary();
+                        products = products.OrderByDescending(product => product.Value.Price);
                     break;
             }
 

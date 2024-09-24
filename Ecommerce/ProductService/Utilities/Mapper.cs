@@ -60,10 +60,10 @@ namespace ProductService.Utilities
             ProductWithIdGRPC productWithIdGRPC = new ProductWithIdGRPC();
 
             productWithIdGRPC.Id = productWithId.Id;
-            productWithIdGRPC.Name = productWithIdGRPC.Name;
-            productWithIdGRPC.Description = productWithIdGRPC.Description;
+            productWithIdGRPC.Name = productWithId.Name;
+            productWithIdGRPC.Description = productWithId.Description;
             productWithIdGRPC.Price = Converter.ConvertDecimalToMoney(productWithId.Price);
-            productWithId.Stock = productWithIdGRPC.Stock;
+            productWithId.Stock = productWithId.Stock;
 
             return productWithIdGRPC;
         }
