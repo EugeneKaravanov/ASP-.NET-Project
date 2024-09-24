@@ -105,7 +105,8 @@ namespace ProductService.Repositories
                 case "Name":
                     if (isReverseSort == false)
                         products = products.OrderBy(product => product.Value.Name);
-                    products = products.OrderByDescending(product => product.Value.Name);
+                    else
+                        products = products.OrderByDescending(product => product.Value.Name);
                     break;
 
                 case "Price":
