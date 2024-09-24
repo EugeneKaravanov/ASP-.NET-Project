@@ -1,7 +1,6 @@
 ﻿using Ecommerce;
 using ProductService.Models;
 using ProductService.Utilities;
-using System.Collections.Concurrent;
 
 namespace ProductService.Repositories
 {
@@ -10,14 +9,34 @@ namespace ProductService.Repositories
         private static int IdCounter = 0;
         private readonly Dictionary<int, Product> _products = new Dictionary<int, Product>();
 
-        public List<ProductInfoWithID> GetProducts()
+        public Page<ProductWithId> GetProducts(GetProductsRequest request)
         {
-            List<ProductInfoWithID> sendingProducts = new List<ProductInfoWithID>();
+            int totalElementsCount = GetProductsCountAfterFiltration(request.NameFilter, request.MinPriceFilter, request.MaxPriceFilter);
+            int elementsOnPageCount = request.ElementsOnPageCount > 0 ? request.ElementsOnPageCount : 1;
+            int totalPagesCount = totalElementsCount % elementsOnPageCount == 0 ? totalElementsCount / elementsOnPageCount : totalElementsCount / elementsOnPageCount + 1;
+            int choosenPageNumber;
+            Dictionary<int, Product> productsDictionary = new Dictionary<int, Product>();
+            List<ProductWithId> products = new List<ProductWithId>();
+            Page<ProductWithId> page;
 
-            foreach (var product in _products)
-                sendingProducts.Add(Mapper.TransferProductAndIdToProductInfoWithId(product.Key, product.Value));
+            if (request.ChoosenPageNumber < 1)
+                choosenPageNumber = 1;
+            else if (request.ChoosenPageNumber > totalElementsCount)
+                choosenPageNumber = totalElementsCount;
+            else choosenPageNumber = request.ChoosenPageNumber;
 
-            return sendingProducts;
+            productsDictionary = _products.
+                Where(product => request.NameFilter == null || product.Value.Name.Contains(request.NameFilter)).
+                Where(product => request.MinPriceFilter.HasValue == false || product.Value.Price >= request.MinPriceFilter).
+                Where(product => request.MinPriceFilter.HasValue == false || product.Value.Price <= request.MinPriceFilter).
+                Skip(elementsOnPageCount * choosenPageNumber - 1).
+                Take(elementsOnPageCount).
+                ToDictionary();
+            productsDictionary = GetProductsAfterSorting(productsDictionary, request.SortArgument, request.IsReverseSort);
+            products = productsDictionary.Select(product => Mapper.TansferProductAndIdToProductWithId(product.Key, product.Value)).ToList();
+            page = new Page<ProductWithId>(totalElementsCount, totalPagesCount, choosenPageNumber, elementsOnPageCount, products);
+
+            return page;
         }
 
         public bool GetProduct(int id, out Product product)
@@ -60,6 +79,44 @@ namespace ProductService.Repositories
                 isDeleted = true;
 
             return isDeleted;
+        }
+
+        private int GetProductsCountAfterFiltration(string? nameFilter, uint? minPriceFilter, uint? maxPriceFilter)
+        {
+            int count = _products.
+                Where(product => nameFilter == null || product.Value.Name.Contains(nameFilter)).
+                Where(product => minPriceFilter.HasValue == false || product.Value.Price >= minPriceFilter).
+                Where(product => maxPriceFilter.HasValue == false || product.Value.Price <= maxPriceFilter).
+                Count();
+
+            return count;
+        }
+
+        private Dictionary<int, Product> GetProductsAfterSorting(Dictionary<int, Product> products, string sortArgument, bool isReverseSort)
+        {
+            if (sortArgument != "Name" && sortArgument != "Price")
+            {
+                return products;
+            }
+
+            switch (sortArgument)
+            {
+                case "Name":
+                    if (isReverseSort == false)
+                        products = products.OrderBy(product => product.Value.Name).ToDictionary();
+                    else
+                        products = products.OrderByDescending(product => product.Value.Name).ToDictionary();
+                    break;
+
+                case "Price":
+                    if (isReverseSort == false)
+                        products = products.OrderBy(product => product.Value.Price).ToDictionary();
+                    else
+                        products = products.OrderByDescending(product => product.Value.Price).ToDictionary();
+                    break;
+            }
+
+            return products;
         }
     }
 }

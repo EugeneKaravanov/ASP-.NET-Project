@@ -5,41 +5,95 @@ namespace ProductService.Utilities
 {
     internal class Mapper
     {
-        internal static ProductInfo TransferProductToProdutctInfo(Product product)
+        internal static ProductGRPC TransferProductToProductGrpc(Product product)
         {
-            ProductInfo productInfo = new ProductInfo();
+            ProductGRPC productGrpc = new ProductGRPC();
 
-            productInfo.Name = product.Name;
-            productInfo.Description = product.Description;
-            productInfo.Price = Converter.ConvertDecimalToMoney(product.Price);
-            productInfo.Stock = product.Stock;
+            productGrpc.Name = product.Name;
+            productGrpc.Description = product.Description;
+            productGrpc.Price = Converter.ConvertDecimalToMoney(product.Price);
+            productGrpc.Stock = product.Stock;
 
-            return productInfo;
+            return productGrpc;
         }
 
-        internal static Product TransferProductInfoToProduct(ProductInfo productInfo)
+        internal static Product TransferProductGRPCToProduct(ProductGRPC productGrpc)
         {
             Product product = new Product();
 
-            product.Name = productInfo.Name;
-            product.Description = productInfo.Description;
-            product.Price = Converter.ConvertMoneyToDecimal(productInfo.Price);
-            product.Stock = productInfo.Stock;
+            product.Name = productGrpc.Name;
+            product.Description = productGrpc.Description;
+            product.Price = Converter.ConvertMoneyToDecimal(productGrpc.Price);
+            product.Stock = productGrpc.Stock;
 
             return product;
         }
 
-        internal static ProductInfoWithID TransferProductAndIdToProductInfoWithId(int id, Product product)
+        internal static ProductWithIdGRPC TransferProductAndIdToProductWithIdGRPC(int id, Product product)
         {
-            ProductInfoWithID productInfoWithID = new ProductInfoWithID();
+            ProductWithIdGRPC productWithIdGrpc = new ProductWithIdGRPC();
 
-            productInfoWithID.Id = id;
-            productInfoWithID.Name = product.Name;
-            productInfoWithID.Description = product.Description;
-            productInfoWithID.Price = Converter.ConvertDecimalToMoney(product.Price);
-            productInfoWithID.Stock = product.Stock;
+            productWithIdGrpc.Id = id;
+            productWithIdGrpc.Name = product.Name;
+            productWithIdGrpc.Description = product.Description;
+            productWithIdGrpc.Price = Converter.ConvertDecimalToMoney(product.Price);
+            productWithIdGrpc.Stock = product.Stock;
 
-            return productInfoWithID;
+            return productWithIdGrpc;
+        }
+
+        internal static Product TransferProductWithIdGRPCToProductAndId(ProductWithIdGRPC productWithIdGRPC, out int id)
+        {
+            Product product = new Product();
+
+            id = productWithIdGRPC.Id;
+            product.Name = productWithIdGRPC.Name;
+            product.Description = productWithIdGRPC.Description;
+            product.Price = Converter.ConvertMoneyToDecimal(productWithIdGRPC.Price);
+            product.Stock = productWithIdGRPC.Stock;
+
+            return product;
+        }
+
+        internal static ProductWithIdGRPC TransferProductWithIdToProductAndIdGRPC(ProductWithId productWithId)
+        {
+            ProductWithIdGRPC productWithIdGRPC = new ProductWithIdGRPC();
+
+            productWithIdGRPC.Id = productWithId.Id;
+            productWithIdGRPC.Name = productWithIdGRPC.Name;
+            productWithIdGRPC.Description = productWithIdGRPC.Description;
+            productWithIdGRPC.Price = Converter.ConvertDecimalToMoney(productWithId.Price);
+            productWithId.Stock = productWithIdGRPC.Stock;
+
+            return productWithIdGRPC;
+        }
+
+        internal static ProductWithId TansferProductAndIdToProductWithId(int id, Product product)
+        {
+            ProductWithId productWithId = new ProductWithId();
+
+            productWithId.Id = id;
+            productWithId.Name = product.Name;
+            productWithId.Description = product.Description;
+            productWithId.Price = product.Price;
+            productWithId.Stock = product.Stock;
+
+            return productWithId;
+        }
+
+        internal static PageGRPC TrasferPageToPageGRPC(Page<ProductWithId> page)
+        {
+            PageGRPC pageGRPC = new PageGRPC();
+
+            pageGRPC.TotalElementsCount = page.TotalElementcCount;
+            pageGRPC.TotalPagesCount = page.TotalPagesCount;
+            pageGRPC.ChoosenPageNumber = page.ChoosenPageNumber;
+            pageGRPC.ElementsOnPageCount = page.ElementOnPageCount;
+
+            foreach (ProductWithId product in page.Products)
+                pageGRPC.Products.Add(TransferProductWithIdToProductAndIdGRPC(product));
+
+            return pageGRPC;
         }
     }
 }

@@ -16,27 +16,15 @@ namespace GatewayService.Controllers
         }
 
         [HttpGet("products")]
-        public async Task<GetProductsWithPaginationResponseDto> GetProducts(GetProductsWithPaginationRequestDto getProductsWithPaginationRequestDto)
+        public async Task<PageDto<ProductWithIdDto>> GetProducts(Models.GetProductsRequestDto getProductsRequestDto)
         {
-            GetProductsWithPaginationRequest request = new GetProductsWithPaginationRequest { ElementsOnPageCount = getProductsWithPaginationRequestDto.ElementsOnCurrentPageCount, CurrentPageNumber = getProductsWithPaginationRequestDto.CurrentPageNumber };
-            GetProductsWithPaginationResponse response = await _productServiceClient.GetProductsAsync(request);
-            GetProductsWithPaginationResponseDto result = new GetProductsWithPaginationResponseDto();
+            GetProductsRequest request = Mapper.TransferGetProductsRequestDtoToGetProductsRequest(getProductsRequestDto);
+            int i = 1;
+            GetProductsResponse response = await _productServiceClient.GetProductsAsync(request);
 
-            List<ProductWithIdDto> products = new List<ProductWithIdDto>();
-            List<ProductInfoWithID> productsResponse = response.Products.ToList<ProductInfoWithID>();
+            PageDto<ProductWithIdDto> pageDto = Mapper.TransferPageGRPCToPageDto(response.Page);
 
-            foreach (var product in productsResponse)
-            {
-                ProductWithIdDto productWithIdDto = Mapper.TransferProductInfoWithIdToProdutctWithIdDto(product);
-                products.Add(productWithIdDto);
-            }
-
-            result.elementsCount = response.AllElementsCount;
-            result.currentPageNumber = response.CurrentPageNumber;
-            result.elementsOnCurrentPageCount = response.ElementsOnCurentPageCount;
-            result.products = products;
-
-            return result;
+            return pageDto;
         }
 
         [HttpGet("products/{id:int}")]
@@ -49,7 +37,7 @@ namespace GatewayService.Controllers
 
             if (response.ResultCase == GetProductResponse.ResultOneofCase.Found)
             {
-                ProductDto result = Mapper.TransferProductToProdutctInfo(response.Found.Product);
+                ProductDto result = Mapper.TransferProductGRPCToProductDto(response.Found.Product);
 
                 return Ok(result);
             }
@@ -66,9 +54,9 @@ namespace GatewayService.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateProduct([FromBody] ProductDto productDto)
         {
-            ProductInfo productInfo = Mapper.TransferProductToProdutctInfo(productDto);
+            ProductGRPC productGRPC = Mapper.TransferProductDtoToProdutctGRPC(productDto);
 
-            CreateProductRequest request = new CreateProductRequest { Product = productInfo };
+            CreateProductRequest request = new CreateProductRequest { Product = productGRPC };
             OperationStatusResponse response = await _productServiceClient.CreateProductAsync(request);
 
             string message = response.Message;
@@ -88,9 +76,9 @@ namespace GatewayService.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductDto productDto)
         {
-            ProductInfo productInfo = Mapper.TransferProductToProdutctInfo(productDto);
+            ProductWithIdGRPC productWithIdGRPC = Mapper.TransferProductDtoAndIdToProductWithIdGRPC(id, productDto);
 
-            UpdateProductRequest request = new UpdateProductRequest { Id = id, Product = productInfo };
+            UpdateProductRequest request = new UpdateProductRequest { Product = productWithIdGRPC };
             OperationStatusResponse response = await _productServiceClient.UpdateProductAsync(request);
 
             string message = response.Message;
@@ -123,49 +111,6 @@ namespace GatewayService.Controllers
             {
                 return BadRequest(message);
             }
-        }
-
-        [HttpGet("products/sort")]
-        [ProducesResponseType(typeof(List<ProductWithIdDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetSortedProducts(SortRequestDto sortRequestDto)
-        {
-            List<ProductWithIdDto> products = new List<ProductWithIdDto>();
-
-            GetSortedProductsRequest request = new GetSortedProductsRequest { Argument = sortRequestDto.SortArgument, IsRevese = sortRequestDto.IsReverse };
-            GetSortedProductsResponse response = await _productServiceClient.GetSortedProductsAsync(request);
-
-            if (response.ResultCase == GetSortedProductsResponse.ResultOneofCase.FailureSort)
-            {
-                return BadRequest(response.FailureSort.Message);
-            }
-
-            foreach (var product in response.SuccessSort.Products)
-            {
-                ProductWithIdDto productWithIdDto = Mapper.TransferProductInfoWithIdToProdutctWithIdDto(product);
-
-                products.Add(productWithIdDto);
-            }
-
-            return Ok(products);
-        }
-
-        [HttpGet("products/filter")]
-        public async Task<List<ProductWithIdDto>> GetFiltredProducts(FilterRequestDto filterRequestDto)
-        {
-            FilterProductsRequest request = new FilterProductsRequest { Name = filterRequestDto.Name, MinPrice = (uint?)filterRequestDto.MinPrice, MaxPrice = (uint?)filterRequestDto.MaxPrice };
-            GetProductsResponse response = await _productServiceClient.GetFiltredProductsAsync(request);
-
-            List<ProductWithIdDto> products = new List<ProductWithIdDto>();
-            List<ProductInfoWithID> productsResponse = response.Products.ToList<ProductInfoWithID>();
-
-            foreach (var product in productsResponse)
-            {
-                ProductWithIdDto productWithIdDto = Mapper.TransferProductInfoWithIdToProdutctWithIdDto(product);
-                products.Add(productWithIdDto);
-            }
-
-            return products;
         }
     }
 }

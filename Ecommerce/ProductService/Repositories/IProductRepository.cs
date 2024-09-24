@@ -5,7 +5,7 @@ namespace ProductService.Repositories
 {
     public interface IProductRepository
     {
-        public List<ProductInfoWithID> GetProducts();
+        public Page<ProductWithId> GetProducts(GetProductsRequest getProductsRequest);
 
         public bool GetProduct(int id, out Product product);
 

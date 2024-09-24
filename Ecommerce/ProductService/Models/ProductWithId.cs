@@ -1,6 +1,6 @@
-﻿namespace GatewayService.Models
+﻿namespace ProductService.Models
 {
-    public class ProductWithIdDto
+    public class ProductWithId
     {
         public int Id { get; set; }
         public string Name { get; set; }

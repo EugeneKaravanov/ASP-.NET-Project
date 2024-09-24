@@ -9,12 +9,10 @@ import "google/protobuf/wrappers.proto";
 service ProductService 
 {
   rpc GetProduct (GetProductRequest) returns (GetProductResponse);
-  rpc GetProducts (GetProductsWithPaginationRequest) returns (GetProductsWithPaginationResponse);
+  rpc GetProducts (GetProductsRequest) returns (GetProductsResponse);
   rpc CreateProduct (CreateProductRequest) returns (OperationStatusResponse);
   rpc UpdateProduct (UpdateProductRequest) returns (OperationStatusResponse);
   rpc DeleteProduct (DeleteProductRequest) returns (OperationStatusResponse);
-  rpc GetSortedProducts (GetSortedProductsRequest) returns (GetSortedProductsResponse);
-  rpc GetFiltredProducts (FilterProductsRequest) returns (GetProductsResponse);
 }
 
 message GetProductRequest 
@@ -22,39 +20,30 @@ message GetProductRequest
   int32 id = 1;
 }
 
-message GetProductsWithPaginationRequest
+message GetProductsRequest
 {
     int32 elements_on_page_count = 1;
-    int32 current_page_number = 2;
+    int32 choosen_page_number = 2;
+    google.protobuf.StringValue name_filter = 3;
+    google.protobuf.UInt32Value min_price_filter = 4;
+    google.protobuf.UInt32Value max_price_filter = 5;
+    google.protobuf.StringValue sort_argument = 6;
+    bool is_reverse_sort = 8;
 }
 
 message CreateProductRequest 
 {
-  ProductInfo product = 1;
+  ProductGRPC product = 1;
 }
 
 message UpdateProductRequest 
 {
-  int32 id = 1;
-  ProductInfo product = 2;
+  ProductWithIdGRPC product = 1;
 }
 
 message DeleteProductRequest 
 {
   int32 id = 1;
-}
-
-message GetSortedProductsRequest
-{
-    string argument = 1;
-    bool is_revese = 2;
-}
-
-message FilterProductsRequest
-{
-    google.protobuf.StringValue name = 1;
-    google.protobuf.UInt32Value min_price = 2;
-    google.protobuf.UInt32Value max_price = 3;
 }
 
 message GetProductResponse 
@@ -67,7 +56,7 @@ message GetProductResponse
 
   message ProductFound 
   {
-    ProductInfo product = 1;
+    ProductGRPC product = 1;
   }
 
   message ProductNotFound 
@@ -76,36 +65,9 @@ message GetProductResponse
   }
 }
 
-message GetProductsResponse 
+message GetProductsResponse
 {
-    repeated ProductInfoWithID products = 1;
-}
-
-message GetProductsWithPaginationResponse
-{
-    int32 all_elements_count = 1;
-    int32 current_page_number = 2;
-    int32 elements_on_curent_page_count = 3;
-    repeated ProductInfoWithID products = 4;
-}
-
-message GetSortedProductsResponse
-{
-    oneof result 
-    {
-        SuccessSort success_sort = 1;
-        FailureSort failure_sort = 2;
-    }
-
-    message SuccessSort
-    {
-        repeated ProductInfoWithID products = 1;
-    }
-
-    message FailureSort
-    {
-        string message = 1;
-    }
+    PageGRPC page = 1;
 }
 
 message OperationStatusResponse 
@@ -114,7 +76,7 @@ message OperationStatusResponse
   string message = 2;
 }
 
-message ProductInfo 
+message ProductGRPC 
 {
   string name = 1;
   string description = 2;
@@ -122,13 +84,22 @@ message ProductInfo
   int32 stock = 4;
 }
 
-message ProductInfoWithID
+message ProductWithIdGRPC
 {
     int32 id = 1;
     string name = 2;
     string description = 3;
     google.type.Money price = 4;
     int32 stock = 5;
+}
+
+message PageGRPC
+{
+    int32 total_elements_count = 1;
+    int32 total_pages_count = 2;
+    int32 choosen_page_number = 3;
+    int32 elements_on_page_count = 4;
+    repeated ProductWithIdGRPC products = 5;
 }
 
 enum Status 

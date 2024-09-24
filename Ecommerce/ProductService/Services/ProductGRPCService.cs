@@ -29,7 +29,7 @@ namespace ProductService.Services
             {
                 GetProductResponse.Types.ProductFound foundedResult = new GetProductResponse.Types.ProductFound();
 
-                foundedResult.Product = Mapper.TransferProductToProdutctInfo(product);
+                foundedResult.Product = Mapper.TransferProductToProductGrpc(product);
                 response.Found = foundedResult;
 
                 return response;
@@ -45,59 +45,19 @@ namespace ProductService.Services
             }
         }
 
-        public override async Task<GetProductsWithPaginationResponse> GetProducts(GetProductsWithPaginationRequest request, ServerCallContext context)
+        public override async Task<GetProductsResponse> GetProducts(GetProductsRequest request, ServerCallContext context)
         {
-            List<ProductInfoWithID> tempProducts = _productRepository.GetProducts();
-            GetProductsWithPaginationResponse response = new GetProductsWithPaginationResponse();
+            PageGRPC pageGRPC = Mapper.TrasferPageToPageGRPC(_productRepository.GetProducts(request));
+            GetProductsResponse getProductsResponse = new GetProductsResponse();
 
-            int firstElementNumberOnChoosenPage;
-            int lastElementNumberOnChoosenPage;
-            int currentPageNumber;
-            int elementsOnCurrentPage;
-            int pagesCount;
+            getProductsResponse.Page = pageGRPC;
 
-            if (request.ElementsOnPageCount < 1)
-                request.ElementsOnPageCount = 1;
-
-            pagesCount = tempProducts.Count / request.ElementsOnPageCount;
-
-            if (tempProducts.Count % request.ElementsOnPageCount > 0 || pagesCount == 0)
-                pagesCount++;
-
-            if (request.CurrentPageNumber > pagesCount)
-                currentPageNumber = pagesCount;
-            else if (request.CurrentPageNumber <= 1)
-                currentPageNumber = 1;
-            else
-                currentPageNumber = request.CurrentPageNumber;
-
-            if (currentPageNumber < pagesCount && request.ElementsOnPageCount >= tempProducts.Count)
-                elementsOnCurrentPage = request.ElementsOnPageCount;
-            else if (currentPageNumber < pagesCount && request.ElementsOnPageCount <= tempProducts.Count)
-                elementsOnCurrentPage = tempProducts.Count;
-            else
-                elementsOnCurrentPage = tempProducts.Count % request.ElementsOnPageCount;
-
-            firstElementNumberOnChoosenPage = (currentPageNumber - 1) * request.ElementsOnPageCount + 1;
-
-            if (tempProducts.Count - (firstElementNumberOnChoosenPage - 1) >= request.ElementsOnPageCount)
-                lastElementNumberOnChoosenPage = firstElementNumberOnChoosenPage + request.ElementsOnPageCount - 1;
-            else
-                lastElementNumberOnChoosenPage = tempProducts.Count;
-
-            response.AllElementsCount = tempProducts.Count;
-            response.CurrentPageNumber = currentPageNumber;
-            response.ElementsOnCurentPageCount = elementsOnCurrentPage;
-
-            for (int i = firstElementNumberOnChoosenPage - 1; i < lastElementNumberOnChoosenPage; i++)
-                response.Products.Add(tempProducts[i]);
-
-            return response;
+            return getProductsResponse;
         }
 
         public override async Task<OperationStatusResponse> CreateProduct(CreateProductRequest request, ServerCallContext context)
         {
-            Product product = Mapper.TransferProductInfoToProduct(request.Product);
+            Product product = Mapper.TransferProductGRPCToProduct(request.Product);
             OperationStatusResponse response = new OperationStatusResponse();
 
             if (_productValidator.Validate(product).IsValid)
@@ -119,17 +79,18 @@ namespace ProductService.Services
 
         public override async Task<OperationStatusResponse> UpdateProduct(UpdateProductRequest request, ServerCallContext context)
         {
-            Product product = Mapper.TransferProductInfoToProduct(request.Product);
+            int id;
+            Product product = Mapper.TransferProductWithIdGRPCToProductAndId(request.Product, out id);
             OperationStatusResponse response = new OperationStatusResponse();
 
             if (_productValidator.Validate(product).IsValid == false)
             {
                 response.Status = Status.Failure;
-                response.Message = $"Не удалось получить продукт с ID {request.Id}!";
+                response.Message = $"Не удалось получить продукт с ID {id}!";
                 return response;
             }
 
-            if (_productRepository.UpdateProduct(request.Id, product))
+            if (_productRepository.UpdateProduct(id, product))
             {
                 response.Status = Status.Success;
                 response.Message = "Продукт успешно обновлен!";
@@ -137,7 +98,7 @@ namespace ProductService.Services
             else
             {
                 response.Status = Status.Failure;
-                response.Message = $"Не удалось получить продукт с ID {request.Id}!";
+                response.Message = $"Не удалось получить продукт с ID {id}!";
             }
 
             return response;
@@ -145,77 +106,22 @@ namespace ProductService.Services
 
         public override async Task<OperationStatusResponse> DeleteProduct(DeleteProductRequest request, ServerCallContext context)
         {
+            OperationStatusResponse response = new OperationStatusResponse();
+
             if (_productRepository.DeleteProduct(request.Id))
-                return new OperationStatusResponse() { Status = Status.Success, Message = "Продукт успешно удален!" };
-            else
-                return new OperationStatusResponse() { Status = Status.Failure, Message = $"Продукт с ID {request.Id} отсутствует в базе данных!" };
-        }
-
-        public override async Task<GetSortedProductsResponse> GetSortedProducts(GetSortedProductsRequest request, ServerCallContext context)
-        {
-            List<ProductInfoWithID> products = _productRepository.GetProducts();
-            GetSortedProductsResponse response = new GetSortedProductsResponse();
-
-            if (request.Argument != "Name" && request.Argument != "Price")
             {
-                GetSortedProductsResponse.Types.FailureSort failureSort = new GetSortedProductsResponse.Types.FailureSort();
-
-                failureSort.Message = $"Сортировка по параметру {request.Argument} не возможна или продукт не имет данного параметра.";
-                response.FailureSort = failureSort;
+                response.Status = Status.Success;
+                response.Message = "Продукт успешно удален!";
 
                 return response;
             }
-
-            switch (request.Argument)
+            else
             {
-                case "Name":
-                    if (request.IsRevese == false)
-                        products = products.OrderBy(product => product.Name).ToList();
-                    else
-                        products = products.OrderByDescending(product => product.Name).ToList();
-                    break;
+                response.Status = Status.Failure;
+                response.Message = $"Продукт с ID {request.Id} отсутствует в базе данных!";
 
-                case "Price":
-                    if (request.IsRevese == false)
-                        products = products.OrderBy(product => Converter.ConvertMoneyToDecimal(product.Price)).ToList();
-                    else
-                        products = products.OrderByDescending(product => Converter.ConvertMoneyToDecimal(product.Price)).ToList();
-                    break;
+                return response;
             }
-
-            GetSortedProductsResponse.Types.SuccessSort successSort = new GetSortedProductsResponse.Types.SuccessSort();
-
-            foreach (var product in products)
-            {
-                successSort.Products.Add(product);
-            }
-
-            response.SuccessSort = successSort;
-
-            return response;
-        }
-
-        public override async Task<GetProductsResponse> GetFiltredProducts(FilterProductsRequest request, ServerCallContext context)
-        {
-            List<ProductInfoWithID> products = _productRepository.GetProducts();
-            GetProductsResponse response = new GetProductsResponse();
-
-            if (request.Name != null)
-                products = products.Where(product => product.Name.Contains(request.Name) == true).ToList();
-
-            if (request.MinPrice.HasValue)
-                products = products.Where(product => Converter.ConvertMoneyToDecimal(product.Price) >= request.MinPrice).ToList();
-
-            if (request.MaxPrice.HasValue)
-                products = products.Where(product => Converter.ConvertMoneyToDecimal(product.Price) <= request.MaxPrice).ToList();
-
-
-            foreach (var product in products)
-            {
-                response.Products.Add(product);
-            }
-
-            return response;
         }
     }
 }
