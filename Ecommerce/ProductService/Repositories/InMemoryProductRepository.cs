@@ -1,45 +1,60 @@
 ﻿using Ecommerce;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using ProductService.Models;
 using ProductService.Utilities;
+using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 namespace ProductService.Repositories
 {
     public class InMemoryProductRepository : IProductRepository
     {
-        private static int IdCounter = 0;
-        private readonly Dictionary<int, Product> _products = new Dictionary<int, Product>();
+        private volatile static int IdCounter = 0;
+        private readonly ConcurrentDictionary<int, Product> _products = new ConcurrentDictionary<int, Product>();
+        object locker = new object();
 
-        public Page<ProductWithId> GetProducts(GetProductsRequest request)
+        public Page<ProductWithId> GetProducts(GetProductsRequest request, CancellationToken cancellationToken)
         {
-            int totalElementsCount = GetProductsCountAfterFiltration(request.NameFilter, request.MinPriceFilter, request.MaxPriceFilter);
-            int elementsOnPageCount = request.ElementsOnPageCount > 0 ? request.ElementsOnPageCount : 1;
-            int totalPagesCount = (int)Math.Ceiling(totalElementsCount / (double)elementsOnPageCount);
             int choosenPageNumber;
             Dictionary<int, Product> productsDictionary = new Dictionary<int, Product>();
             List<ProductWithId> products = new List<ProductWithId>();
-            Page<ProductWithId> page;
+            Page<ProductWithId> page = null;
+            int totalElementsCount;
+            int elementsOnPageCount;
+            int totalPagesCount;
 
-            if (request.ChoosenPageNumber < 1)
-                choosenPageNumber = 1;
-            else if (request.ChoosenPageNumber > totalPagesCount)
-                choosenPageNumber = totalPagesCount;
-            else choosenPageNumber = request.ChoosenPageNumber;
+            lock (locker)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    return page;
 
-            products = _products
-                .Where(product => request.NameFilter == null || product.Value.Name.Contains(request.NameFilter))
-                .Where(product => request.MinPriceFilter.HasValue == false || product.Value.Price >= request.MinPriceFilter)
-                .Where(product => request.MaxPriceFilter.HasValue == false || product.Value.Price <= request.MaxPriceFilter)
-                .GetProductsAfterSorting(request.SortArgument, request.IsReverseSort)
-                .Skip(elementsOnPageCount * (choosenPageNumber - 1))
-                .Take(elementsOnPageCount)
-                .Select(product => Mapper.TansferProductAndIdToProductWithId(product.Key, product.Value))
-                .ToList();
+                totalElementsCount = GetProductsCountAfterFiltration(request.NameFilter, request.MinPriceFilter, request.MaxPriceFilter);
+                elementsOnPageCount = request.ElementsOnPageCount > 0 ? request.ElementsOnPageCount : 1;
+                totalPagesCount = (int)Math.Ceiling(totalElementsCount / (double)elementsOnPageCount);
+
+                if (request.ChoosenPageNumber < 1)
+                    choosenPageNumber = 1;
+                else if (request.ChoosenPageNumber > totalPagesCount)
+                    choosenPageNumber = totalPagesCount;
+                else choosenPageNumber = request.ChoosenPageNumber;
+
+                products = _products
+                    .Where(product => request.NameFilter == null || product.Value.Name.Contains(request.NameFilter))
+                    .Where(product => request.MinPriceFilter.HasValue == false || product.Value.Price >= request.MinPriceFilter)
+                    .Where(product => request.MaxPriceFilter.HasValue == false || product.Value.Price <= request.MaxPriceFilter)
+                    .GetProductsAfterSorting(request.SortArgument, request.IsReverseSort)
+                    .Skip(elementsOnPageCount * (choosenPageNumber - 1))
+                    .Take(elementsOnPageCount)
+                    .Select(product => Mapper.TansferProductAndIdToProductWithId(product.Key, product.Value))
+                    .ToList();
+            }
+
             page = new Page<ProductWithId>(totalElementsCount, totalPagesCount, choosenPageNumber, elementsOnPageCount, products);
 
             return page;
         }
 
-        public bool GetProduct(int id, out Product product)
+        public bool GetProduct(int id, out Product product, CancellationToken cancellationToken)
         {
             product = null;
             bool isFinded = false;
@@ -53,30 +68,59 @@ namespace ProductService.Repositories
             return isFinded;
         }
 
-        public void CreateProduct(Product product)
+        public void CreateProduct(Product product, CancellationToken cancellationToken)
         {
-            _products.Add(++IdCounter, product);
+            lock(locker)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
+                IdCounter++;
+                _products.TryAdd(IdCounter, product);
+            }
         }
 
-        public bool UpdateProduct(int id, Product product)
+        public bool UpdateProduct(int id, Product product, CancellationToken cancellationToken)
         {
             bool isUpdated = false;
+            bool isCanExit = false;
 
-            if (_products.ContainsKey(id))
+            while (isCanExit == false)
             {
-                _products[id] = product;
-                isUpdated = true;
+                if (_products.TryGetValue(id, out Product oldProduct) == false)
+                {
+                    isCanExit = true;
+                    continue;
+                }
+
+                lock(locker)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        return false;
+
+                    if (_products.TryUpdate(id, product, oldProduct))
+                    {
+                        isUpdated = true;
+                        isCanExit = true;
+                    }
+                }
             }
 
             return isUpdated;
         }
 
-        public bool DeleteProduct(int id)
+        public bool DeleteProduct(int id, CancellationToken cancellationToken)
         {
             bool isDeleted = false;
+            
+            lock(locker)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    return false;
 
-            if (_products.Remove(id))
-                isDeleted = true;
+                if (_products.TryRemove(id, out Product product))
+                    isDeleted = true;
+            }
 
             return isDeleted;
         }

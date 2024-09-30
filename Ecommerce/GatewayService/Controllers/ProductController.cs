@@ -19,7 +19,7 @@ namespace GatewayService.Controllers
         public async Task<PageDto<ProductWithIdDto>> GetProducts(Models.GetProductsRequestDto getProductsRequestDto)
         {
             GetProductsRequest request = Mapper.TransferGetProductsRequestDtoToGetProductsRequest(getProductsRequestDto);
-            GetProductsResponse response = await _productServiceClient.GetProductsAsync(request);
+            GetProductsResponse response = await _productServiceClient.GetProductsAsync(request).ConfigureAwait(false);
 
             PageDto<ProductWithIdDto> pageDto = Mapper.TransferPageGRPCToPageDto(response.Page);
 
@@ -32,7 +32,7 @@ namespace GatewayService.Controllers
         public async Task<IActionResult> GetProduct(int id)
         {
             GetProductRequest request = new GetProductRequest { Id = id };
-            GetProductResponse response = await _productServiceClient.GetProductAsync(request);
+            GetProductResponse response = await _productServiceClient.GetProductAsync(request).ConfigureAwait(false);
 
             if (response.ResultCase == GetProductResponse.ResultOneofCase.Found)
             {
@@ -56,7 +56,7 @@ namespace GatewayService.Controllers
             ProductGRPC productGRPC = Mapper.TransferProductDtoToProdutctGRPC(productDto);
 
             CreateProductRequest request = new CreateProductRequest { Product = productGRPC };
-            OperationStatusResponse response = await _productServiceClient.CreateProductAsync(request);
+            OperationStatusResponse response = await _productServiceClient.CreateProductAsync(request).ConfigureAwait(false);
 
             string message = response.Message;
 
@@ -78,7 +78,7 @@ namespace GatewayService.Controllers
             ProductWithIdGRPC productWithIdGRPC = Mapper.TransferProductDtoAndIdToProductWithIdGRPC(id, productDto);
 
             UpdateProductRequest request = new UpdateProductRequest { Product = productWithIdGRPC };
-            OperationStatusResponse response = await _productServiceClient.UpdateProductAsync(request);
+            OperationStatusResponse response = await _productServiceClient.UpdateProductAsync(request).ConfigureAwait(false);
 
             string message = response.Message;
 
@@ -98,7 +98,7 @@ namespace GatewayService.Controllers
         public async Task<IActionResult> DeleteProduct(int id)
         {
             DeleteProductRequest request = new DeleteProductRequest { Id = id };
-            OperationStatusResponse response = await _productServiceClient.DeleteProductAsync(request);
+            OperationStatusResponse response = await _productServiceClient.DeleteProductAsync(request).ConfigureAwait(false);
 
             string message = response.Message;
 

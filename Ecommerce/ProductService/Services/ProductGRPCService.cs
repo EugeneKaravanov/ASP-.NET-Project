@@ -20,7 +20,7 @@ namespace ProductService.Services
             _productValidator = productValidator;
         }
 
-        public override async Task<GetProductResponse> GetProduct(GetProductRequest request, ServerCallContext context)
+        public override async Task<GetProductResponse> GetProduct(GetProductRequest request, ServerCallContext context, CancellationToken cancellationToken)
         {
             Product product;
             GetProductResponse response = new GetProductResponse();
@@ -45,7 +45,7 @@ namespace ProductService.Services
             }
         }
 
-        public override async Task<GetProductsResponse> GetProducts(GetProductsRequest request, ServerCallContext context)
+        public override async Task<GetProductsResponse> GetProducts(GetProductsRequest request, ServerCallContext context, CancellationToken cancellationToken)
         {
             PageGRPC pageGRPC = Mapper.TrasferPageToPageGRPC(_productRepository.GetProducts(request));
             GetProductsResponse getProductsResponse = new GetProductsResponse();
@@ -55,7 +55,7 @@ namespace ProductService.Services
             return getProductsResponse;
         }
 
-        public override async Task<OperationStatusResponse> CreateProduct(CreateProductRequest request, ServerCallContext context)
+        public override async Task<OperationStatusResponse> CreateProduct(CreateProductRequest request, ServerCallContext context, CancellationToken cancellationToken)
         {
             Product product = Mapper.TransferProductGRPCToProduct(request.Product);
             OperationStatusResponse response = new OperationStatusResponse();
@@ -77,7 +77,7 @@ namespace ProductService.Services
             }
         }
 
-        public override async Task<OperationStatusResponse> UpdateProduct(UpdateProductRequest request, ServerCallContext context)
+        public override async Task<OperationStatusResponse> UpdateProduct(UpdateProductRequest request, ServerCallContext context, CancellationToken cancellationToken)
         {
             int id;
             Product product = Mapper.TransferProductWithIdGRPCToProductAndId(request.Product, out id);
@@ -104,7 +104,7 @@ namespace ProductService.Services
             return response;
         }
 
-        public override async Task<OperationStatusResponse> DeleteProduct(DeleteProductRequest request, ServerCallContext context)
+        public override async Task<OperationStatusResponse> DeleteProduct(DeleteProductRequest request, ServerCallContext context, CancellationToken cancellationToken)
         {
             OperationStatusResponse response = new OperationStatusResponse();
 
