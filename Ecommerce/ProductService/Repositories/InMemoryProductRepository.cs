@@ -15,7 +15,6 @@ namespace ProductService.Repositories
             int elementsOnPageCount = request.ElementsOnPageCount > 0 ? request.ElementsOnPageCount : 1;
             int totalPagesCount = (int)Math.Ceiling(totalElementsCount / (double)elementsOnPageCount);
             int choosenPageNumber;
-            IEnumerable<KeyValuePair<int, Product>> productsRequest;
             Dictionary<int, Product> productsDictionary = new Dictionary<int, Product>();
             List<ProductWithId> products = new List<ProductWithId>();
             Page<ProductWithId> page;
@@ -26,12 +25,11 @@ namespace ProductService.Repositories
                 choosenPageNumber = totalPagesCount;
             else choosenPageNumber = request.ChoosenPageNumber;
 
-            productsRequest = _products
+            products = _products
                 .Where(product => request.NameFilter == null || product.Value.Name.Contains(request.NameFilter))
                 .Where(product => request.MinPriceFilter.HasValue == false || product.Value.Price >= request.MinPriceFilter)
-                .Where(product => request.MaxPriceFilter.HasValue == false || product.Value.Price <= request.MaxPriceFilter);
-            productsRequest = GetProductsAfterSorting(productsRequest, request.SortArgument, request.IsReverseSort);
-            products = productsRequest
+                .Where(product => request.MaxPriceFilter.HasValue == false || product.Value.Price <= request.MaxPriceFilter)
+                .GetProductsAfterSorting(request.SortArgument, request.IsReverseSort)
                 .Skip(elementsOnPageCount * (choosenPageNumber - 1))
                 .Take(elementsOnPageCount)
                 .Select(product => Mapper.TansferProductAndIdToProductWithId(product.Key, product.Value))
@@ -92,33 +90,6 @@ namespace ProductService.Repositories
                 Count();
 
             return count;
-        }
-
-        private IEnumerable<KeyValuePair<int, Product>> GetProductsAfterSorting(IEnumerable<KeyValuePair<int, Product>> products, string sortArgument, bool isReverseSort)
-        {
-            if (sortArgument != "Name" && sortArgument != "Price")
-            {
-                return products;
-            }
-
-            switch (sortArgument)
-            {
-                case "Name":
-                    if (isReverseSort == false)
-                        products = products.OrderBy(product => product.Value.Name);
-                    else
-                        products = products.OrderByDescending(product => product.Value.Name);
-                    break;
-
-                case "Price":
-                    if (isReverseSort == false)
-                        products = products.OrderBy(product => product.Value.Price);
-                    else
-                        products = products.OrderByDescending(product => product.Value.Price);
-                    break;
-            }
-
-            return products;
         }
     }
 }
