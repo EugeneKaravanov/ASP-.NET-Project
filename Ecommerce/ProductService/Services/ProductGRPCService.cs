@@ -20,12 +20,12 @@ namespace ProductService.Services
             _productValidator = productValidator;
         }
 
-        public override async Task<GetProductResponse> GetProduct(GetProductRequest request, ServerCallContext context, CancellationToken cancellationToken)
+        public override async Task<GetProductResponse> GetProduct(GetProductRequest request, ServerCallContext context)
         {
             Product product;
             GetProductResponse response = new GetProductResponse();
 
-            if (_productRepository.GetProduct(request.Id, out product))
+            if (_productRepository.GetProduct(request.Id, out product, context.CancellationToken))
             {
                 GetProductResponse.Types.ProductFound foundedResult = new GetProductResponse.Types.ProductFound();
 
@@ -45,9 +45,9 @@ namespace ProductService.Services
             }
         }
 
-        public override async Task<GetProductsResponse> GetProducts(GetProductsRequest request, ServerCallContext context, CancellationToken cancellationToken)
+        public override async Task<GetProductsResponse> GetProducts(GetProductsRequest request, ServerCallContext context)
         {
-            PageGRPC pageGRPC = Mapper.TrasferPageToPageGRPC(_productRepository.GetProducts(request));
+            PageGRPC pageGRPC = Mapper.TrasferPageToPageGRPC(_productRepository.GetProducts(request, context.CancellationToken));
             GetProductsResponse getProductsResponse = new GetProductsResponse();
 
             getProductsResponse.Page = pageGRPC;
@@ -55,14 +55,14 @@ namespace ProductService.Services
             return getProductsResponse;
         }
 
-        public override async Task<OperationStatusResponse> CreateProduct(CreateProductRequest request, ServerCallContext context, CancellationToken cancellationToken)
+        public override async Task<OperationStatusResponse> CreateProduct(CreateProductRequest request, ServerCallContext context)
         {
             Product product = Mapper.TransferProductGRPCToProduct(request.Product);
             OperationStatusResponse response = new OperationStatusResponse();
 
             if (_productValidator.Validate(product).IsValid)
             {
-                _productRepository.CreateProduct(product);
+                _productRepository.CreateProduct(product, context.CancellationToken);
                 response.Status = Status.Success;
                 response.Message = "Продукт успешно добавлен!";
 
@@ -77,7 +77,7 @@ namespace ProductService.Services
             }
         }
 
-        public override async Task<OperationStatusResponse> UpdateProduct(UpdateProductRequest request, ServerCallContext context, CancellationToken cancellationToken)
+        public override async Task<OperationStatusResponse> UpdateProduct(UpdateProductRequest request, ServerCallContext context)
         {
             int id;
             Product product = Mapper.TransferProductWithIdGRPCToProductAndId(request.Product, out id);
@@ -90,7 +90,7 @@ namespace ProductService.Services
                 return response;
             }
 
-            if (_productRepository.UpdateProduct(id, product))
+            if (_productRepository.UpdateProduct(id, product, context.CancellationToken))
             {
                 response.Status = Status.Success;
                 response.Message = "Продукт успешно обновлен!";
@@ -104,11 +104,11 @@ namespace ProductService.Services
             return response;
         }
 
-        public override async Task<OperationStatusResponse> DeleteProduct(DeleteProductRequest request, ServerCallContext context, CancellationToken cancellationToken)
+        public override async Task<OperationStatusResponse> DeleteProduct(DeleteProductRequest request, ServerCallContext context)
         {
             OperationStatusResponse response = new OperationStatusResponse();
 
-            if (_productRepository.DeleteProduct(request.Id))
+            if (_productRepository.DeleteProduct(request.Id, context.CancellationToken))
             {
                 response.Status = Status.Success;
                 response.Message = "Продукт успешно удален!";

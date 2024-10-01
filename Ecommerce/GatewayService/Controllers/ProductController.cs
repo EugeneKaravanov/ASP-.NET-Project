@@ -16,10 +16,10 @@ namespace GatewayService.Controllers
         }
 
         [HttpGet("products")]
-        public async Task<PageDto<ProductWithIdDto>> GetProducts(Models.GetProductsRequestDto getProductsRequestDto)
+        public async Task<PageDto<ProductWithIdDto>> GetProducts(Models.GetProductsRequestDto getProductsRequestDto, CancellationToken cancellationToken)
         {
             GetProductsRequest request = Mapper.TransferGetProductsRequestDtoToGetProductsRequest(getProductsRequestDto);
-            GetProductsResponse response = await _productServiceClient.GetProductsAsync(request).ConfigureAwait(false);
+            GetProductsResponse response = await _productServiceClient.GetProductsAsync(request, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             PageDto<ProductWithIdDto> pageDto = Mapper.TransferPageGRPCToPageDto(response.Page);
 
@@ -29,10 +29,10 @@ namespace GatewayService.Controllers
         [HttpGet("products/{id:int}")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetProduct(int id)
+        public async Task<IActionResult> GetProduct(int id, CancellationToken cancellationToken)
         {
             GetProductRequest request = new GetProductRequest { Id = id };
-            GetProductResponse response = await _productServiceClient.GetProductAsync(request).ConfigureAwait(false);
+            GetProductResponse response = await _productServiceClient.GetProductAsync(request, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             if (response.ResultCase == GetProductResponse.ResultOneofCase.Found)
             {
@@ -51,12 +51,12 @@ namespace GatewayService.Controllers
         [HttpPost("products")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateProduct([FromBody] ProductDto productDto)
+        public async Task<IActionResult> CreateProduct([FromBody] ProductDto productDto, CancellationToken cancellationToken)
         {
             ProductGRPC productGRPC = Mapper.TransferProductDtoToProdutctGRPC(productDto);
 
             CreateProductRequest request = new CreateProductRequest { Product = productGRPC };
-            OperationStatusResponse response = await _productServiceClient.CreateProductAsync(request).ConfigureAwait(false);
+            OperationStatusResponse response = await _productServiceClient.CreateProductAsync(request, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             string message = response.Message;
 
@@ -73,12 +73,12 @@ namespace GatewayService.Controllers
         [HttpPut("products/{id:int}")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductDto productDto)
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductDto productDto, CancellationToken cancellationToken)
         {
             ProductWithIdGRPC productWithIdGRPC = Mapper.TransferProductDtoAndIdToProductWithIdGRPC(id, productDto);
 
             UpdateProductRequest request = new UpdateProductRequest { Product = productWithIdGRPC };
-            OperationStatusResponse response = await _productServiceClient.UpdateProductAsync(request).ConfigureAwait(false);
+            OperationStatusResponse response = await _productServiceClient.UpdateProductAsync(request, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             string message = response.Message;
 
@@ -95,10 +95,10 @@ namespace GatewayService.Controllers
         [HttpDelete("products/{id:int}")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> DeleteProduct(int id)
+        public async Task<IActionResult> DeleteProduct(int id, CancellationToken cancellationToken)
         {
             DeleteProductRequest request = new DeleteProductRequest { Id = id };
-            OperationStatusResponse response = await _productServiceClient.DeleteProductAsync(request).ConfigureAwait(false);
+            OperationStatusResponse response = await _productServiceClient.DeleteProductAsync(request, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             string message = response.Message;
 
