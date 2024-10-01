@@ -31,6 +31,8 @@ namespace ProductService.Repositories
             {
                 try
                 {
+                    int oldProductsRepistoryHash = _products.GetHashCode();
+
                     totalElementsCount = GetProductsCountAfterFiltration(request.NameFilter, request.MinPriceFilter, request.MaxPriceFilter);
                     elementsOnPageCount = request.ElementsOnPageCount > 0 ? request.ElementsOnPageCount : 1;
                     totalPagesCount = (int)Math.Ceiling(totalElementsCount / (double)elementsOnPageCount);
@@ -51,9 +53,11 @@ namespace ProductService.Repositories
                         .Select(product => Mapper.TansferProductAndIdToProductWithId(product.Key, product.Value))
                         .ToList();
 
-                    //ЗДЕСЬ ДОЛЖНА БЫТЬ ПРОВЕРКА, ЧТО ЗА ВРЕМЯ РАБОТЫ МЕТОДА СПИСОК ПРОДУКТОВ НЕ ПОМЕНЯЛСЯ. ЕСЛИ ВСЕ ОК - isPageFormed = true, ЕСЛИ НЕТ - НОВАЯ ПОПЫТКА.
-
-                    page = new Page<ProductWithId>(totalElementsCount, totalPagesCount, choosenPageNumber, elementsOnPageCount, products);
+                    if (oldProductsRepistoryHash == _products.GetHashCode())
+                    {
+                        page = new Page<ProductWithId>(totalElementsCount, totalPagesCount, choosenPageNumber, elementsOnPageCount, products);
+                        isPageFormed = true;
+                    }
                 }
                 catch
                 {
