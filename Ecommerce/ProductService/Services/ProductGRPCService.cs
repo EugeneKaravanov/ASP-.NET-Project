@@ -25,7 +25,7 @@ namespace ProductService.Services
             Product product;
             GetProductResponse response = new GetProductResponse();
 
-            if (_productRepository.GetProduct(request.Id, out product))
+            if (_productRepository.GetProduct(request.Id, out product, context.CancellationToken))
             {
                 GetProductResponse.Types.ProductFound foundedResult = new GetProductResponse.Types.ProductFound();
 
@@ -47,7 +47,7 @@ namespace ProductService.Services
 
         public override async Task<GetProductsResponse> GetProducts(GetProductsRequest request, ServerCallContext context)
         {
-            PageGRPC pageGRPC = Mapper.TrasferPageToPageGRPC(_productRepository.GetProducts(request));
+            PageGRPC pageGRPC = Mapper.TrasferPageToPageGRPC(_productRepository.GetProducts(request, context.CancellationToken));
             GetProductsResponse getProductsResponse = new GetProductsResponse();
 
             getProductsResponse.Page = pageGRPC;
@@ -62,7 +62,7 @@ namespace ProductService.Services
 
             if (_productValidator.Validate(product).IsValid)
             {
-                _productRepository.CreateProduct(product);
+                _productRepository.CreateProduct(product, context.CancellationToken);
                 response.Status = Status.Success;
                 response.Message = "Продукт успешно добавлен!";
 
@@ -90,7 +90,7 @@ namespace ProductService.Services
                 return response;
             }
 
-            if (_productRepository.UpdateProduct(id, product))
+            if (_productRepository.UpdateProduct(id, product, context.CancellationToken))
             {
                 response.Status = Status.Success;
                 response.Message = "Продукт успешно обновлен!";
@@ -108,7 +108,7 @@ namespace ProductService.Services
         {
             OperationStatusResponse response = new OperationStatusResponse();
 
-            if (_productRepository.DeleteProduct(request.Id))
+            if (_productRepository.DeleteProduct(request.Id, context.CancellationToken))
             {
                 response.Status = Status.Success;
                 response.Message = "Продукт успешно удален!";

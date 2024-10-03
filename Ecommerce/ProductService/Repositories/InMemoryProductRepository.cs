@@ -1,89 +1,142 @@
 ﻿using Ecommerce;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using ProductService.Models;
 using ProductService.Utilities;
+using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 namespace ProductService.Repositories
 {
     public class InMemoryProductRepository : IProductRepository
     {
         private static int IdCounter = 0;
-        private readonly Dictionary<int, Product> _products = new Dictionary<int, Product>();
+        private readonly ConcurrentDictionary<int, Product> _products = new ConcurrentDictionary<int, Product>();
+        object locker = new object();
 
-        public Page<ProductWithId> GetProducts(GetProductsRequest request)
+        public Page<ProductWithId> GetProducts(GetProductsRequest request, CancellationToken cancellationToken = default)
         {
-            int totalElementsCount = GetProductsCountAfterFiltration(request.NameFilter, request.MinPriceFilter, request.MaxPriceFilter);
-            int elementsOnPageCount = request.ElementsOnPageCount > 0 ? request.ElementsOnPageCount : 1;
-            int totalPagesCount = (int)Math.Ceiling(totalElementsCount / (double)elementsOnPageCount);
-            int choosenPageNumber;
-            IEnumerable<KeyValuePair<int, Product>> productsRequest;
+            if (cancellationToken.IsCancellationRequested)
+                return null;
+
+            int chosenPageNumber;
             Dictionary<int, Product> productsDictionary = new Dictionary<int, Product>();
             List<ProductWithId> products = new List<ProductWithId>();
-            Page<ProductWithId> page;
+            Page<ProductWithId> page = null;
+            int totalElementsCount;
+            int elementsOnPageCount;
+            int totalPagesCount;
+            bool isPageFormed = false;
 
-            if (request.ChoosenPageNumber < 1)
-                choosenPageNumber = 1;
-            else if (request.ChoosenPageNumber > totalPagesCount)
-                choosenPageNumber = totalPagesCount;
-            else choosenPageNumber = request.ChoosenPageNumber;
+            while (isPageFormed == false)
+            {
+                try
+                {
+                    int oldProductsRepistoryHash = _products.GetHashCode();
 
-            productsRequest = _products
-                .Where(product => request.NameFilter == null || product.Value.Name.Contains(request.NameFilter))
-                .Where(product => request.MinPriceFilter.HasValue == false || product.Value.Price >= request.MinPriceFilter)
-                .Where(product => request.MaxPriceFilter.HasValue == false || product.Value.Price <= request.MaxPriceFilter);
-            productsRequest = GetProductsAfterSorting(productsRequest, request.SortArgument, request.IsReverseSort);
-            products = productsRequest
-                .Skip(elementsOnPageCount * (choosenPageNumber - 1))
-                .Take(elementsOnPageCount)
-                .Select(product => Mapper.TansferProductAndIdToProductWithId(product.Key, product.Value))
-                .ToList();
-            page = new Page<ProductWithId>(totalElementsCount, totalPagesCount, choosenPageNumber, elementsOnPageCount, products);
+                    totalElementsCount = GetFiltredProductsCount(request.NameFilter, request.MinPriceFilter, request.MaxPriceFilter);
+                    elementsOnPageCount = request.ElementsOnPageCount > 0 ? request.ElementsOnPageCount : 1;
+                    totalPagesCount = (int)Math.Ceiling(totalElementsCount / (double)elementsOnPageCount);
+
+                    if (request.ChoosenPageNumber < 1)
+                        chosenPageNumber = 1;
+                    else if (request.ChoosenPageNumber > totalPagesCount)
+                        chosenPageNumber = totalPagesCount;
+                    else chosenPageNumber = request.ChoosenPageNumber;
+
+                    products = _products
+                        .Where(product => request.NameFilter == null || product.Value.Name.Contains(request.NameFilter))
+                        .Where(product => request.MinPriceFilter.HasValue == false || product.Value.Price >= request.MinPriceFilter)
+                        .Where(product => request.MaxPriceFilter.HasValue == false || product.Value.Price <= request.MaxPriceFilter)
+                        .GetProductsAfterSorting(request.SortArgument, request.IsReverseSort)
+                        .Skip(elementsOnPageCount * (chosenPageNumber - 1))
+                        .Take(elementsOnPageCount)
+                        .Select(product => Mapper.TansferProductAndIdToProductWithId(product.Key, product.Value))
+                        .ToList();
+
+                    if (oldProductsRepistoryHash == _products.GetHashCode())
+                    {
+                        page = new Page<ProductWithId>(totalElementsCount, totalPagesCount, chosenPageNumber, elementsOnPageCount, products);
+                        isPageFormed = true;
+                    }
+                }
+                catch
+                {
+                    //УБРАТЬ ЦИКЛ И TRYCATCH
+                }
+            }
 
             return page;
         }
 
-        public bool GetProduct(int id, out Product product)
+        public bool GetProduct(int id, out Product product, CancellationToken cancellationToken = default)
         {
             product = null;
-            bool isFinded = false;
+
+            if (cancellationToken.IsCancellationRequested)
+                return false;
+
+            bool isFound = false;
 
             if (_products.TryGetValue(id, out Product value))
             {
-                isFinded = true;
+                isFound = true;
                 product = value;
             }
 
-            return isFinded;
+            return isFound;
         }
 
-        public void CreateProduct(Product product)
+        public void CreateProduct(Product product, CancellationToken cancellationToken = default)
         {
-            _products.Add(++IdCounter, product);
+            if (cancellationToken.IsCancellationRequested)
+                return;
+
+            int localCounter = Interlocked.Increment(ref IdCounter);
+            //ПРОВЕРКА НА УНИКАЛЬНОСТЬ
+            _products.TryAdd(localCounter, product);
         }
 
-        public bool UpdateProduct(int id, Product product)
+        public bool UpdateProduct(int id, Product product, CancellationToken cancellationToken = default)
         {
+            if (cancellationToken.IsCancellationRequested)
+                return false;
+
             bool isUpdated = false;
+            bool IsOperagtionComplited = false;
 
-            if (_products.ContainsKey(id))
+            while (IsOperagtionComplited == false)
             {
-                _products[id] = product;
-                isUpdated = true;
+                if (_products.TryGetValue(id, out Product oldProduct) == false)
+                {
+                    //ПРОВЕРКА НА УНИКАЛЬНОСТЬ
+                    IsOperagtionComplited = true;
+                    continue;
+                }
+
+                if (_products.TryUpdate(id, product, oldProduct))
+                {
+                    isUpdated = true;
+                    IsOperagtionComplited = true;
+                }
             }
 
             return isUpdated;
         }
 
-        public bool DeleteProduct(int id)
+        public bool DeleteProduct(int id, CancellationToken cancellationToken = default)
         {
+            if (cancellationToken.IsCancellationRequested)
+                return false;
+
             bool isDeleted = false;
 
-            if (_products.Remove(id))
+             if (_products.TryRemove(id, out Product product))
                 isDeleted = true;
 
             return isDeleted;
         }
 
-        private int GetProductsCountAfterFiltration(string? nameFilter, uint? minPriceFilter, uint? maxPriceFilter)
+        private int GetFiltredProductsCount(string? nameFilter, uint? minPriceFilter, uint? maxPriceFilter)
         {
             int count = _products.
                 Where(product => nameFilter == null || product.Value.Name.Contains(nameFilter)).
@@ -92,33 +145,6 @@ namespace ProductService.Repositories
                 Count();
 
             return count;
-        }
-
-        private IEnumerable<KeyValuePair<int, Product>> GetProductsAfterSorting(IEnumerable<KeyValuePair<int, Product>> products, string sortArgument, bool isReverseSort)
-        {
-            if (sortArgument != "Name" && sortArgument != "Price")
-            {
-                return products;
-            }
-
-            switch (sortArgument)
-            {
-                case "Name":
-                    if (isReverseSort == false)
-                        products = products.OrderBy(product => product.Value.Name);
-                    else
-                        products = products.OrderByDescending(product => product.Value.Name);
-                    break;
-
-                case "Price":
-                    if (isReverseSort == false)
-                        products = products.OrderBy(product => product.Value.Price);
-                    else
-                        products = products.OrderByDescending(product => product.Value.Price);
-                    break;
-            }
-
-            return products;
         }
     }
 }
