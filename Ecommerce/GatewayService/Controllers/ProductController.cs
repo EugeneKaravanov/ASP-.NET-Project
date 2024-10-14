@@ -16,6 +16,7 @@ namespace GatewayService.Controllers
         }
 
         [HttpGet("products")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<PageDto<ProductWithIdDto>> GetProducts(Models.GetProductsRequestDto getProductsRequestDto, CancellationToken cancellationToken)
         {
             GetProductsRequest request = Mapper.TransferGetProductsRequestDtoToGetProductsRequest(getProductsRequestDto);
@@ -51,6 +52,7 @@ namespace GatewayService.Controllers
         [HttpPost("products")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateProduct([FromBody] ProductDto productDto, CancellationToken cancellationToken)
         {
             ProductGRPC productGRPC = Mapper.TransferProductDtoToProdutctGRPC(productDto);
@@ -60,19 +62,23 @@ namespace GatewayService.Controllers
 
             string message = response.Message;
 
-            if (response.Status == Status.Success)
+            switch (response.Status)
             {
-                return Ok(message);
-            }
-            else
-            {
-                return BadRequest(message);
+                case Ecommerce.Status.Success:
+                    return Ok(message);
+
+                case Ecommerce.Status.Failure:
+                    return Ok(message);
+
+                default:
+                    return BadRequest(message);
             }
         }
 
         [HttpPut("products/{id:int}")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductDto productDto, CancellationToken cancellationToken)
         {
             ProductWithIdGRPC productWithIdGRPC = Mapper.TransferProductDtoAndIdToProductWithIdGRPC(id, productDto);
@@ -82,19 +88,22 @@ namespace GatewayService.Controllers
 
             string message = response.Message;
 
-            if (response.Status == Status.Success)
+            switch (response.Status)
             {
-                return Ok(message);
-            }
-            else
-            {
-                return BadRequest(message);
+                case Ecommerce.Status.Success:
+                    return Ok(message);
+
+                case Ecommerce.Status.Failure:
+                    return Ok(message);
+
+                default:
+                    return BadRequest(message);
             }
         }
 
         [HttpDelete("products/{id:int}")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteProduct(int id, CancellationToken cancellationToken)
         {
             DeleteProductRequest request = new DeleteProductRequest { Id = id };
@@ -102,13 +111,13 @@ namespace GatewayService.Controllers
 
             string message = response.Message;
 
-            if (response.Status == Status.Success)
+            if (response.Status == Ecommerce.Status.Success)
             {
                 return Ok(message);
             }
             else
             {
-                return BadRequest(message);
+                return NotFound(message);
             }
         }
     }

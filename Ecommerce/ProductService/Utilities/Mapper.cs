@@ -95,5 +95,20 @@ namespace ProductService.Utilities
 
             return pageGRPC;
         }
+
+        internal static Ecommerce.Status TransferResultStatusToResponseStatus(Models.Status status)
+        {
+            switch (status)
+            {
+                case Models.Status.Success:
+                    return Ecommerce.Status.Success;
+
+                case Models.Status.Failure:
+                    return Ecommerce.Status.Failure;
+
+                default:
+                    return Ecommerce.Status.NotFound;
+            }
+        }
     }
 }
