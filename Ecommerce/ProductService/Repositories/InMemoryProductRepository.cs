@@ -11,10 +11,10 @@ namespace ProductService.Repositories
         private readonly ConcurrentDictionary<int, Product> _products = new ConcurrentDictionary<int, Product>();
         private readonly ConcurrentDictionary<string, Product> _usedNames = new ConcurrentDictionary<string, Product>();
 
-        public Page<ProductWithId> GetProducts(GetProductsRequest request, CancellationToken cancellationToken = default)
+        public Task<Page<ProductWithId>> GetProductsAsync(GetProductsRequest request, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-                Task.FromCanceled(cancellationToken);
+            if(cancellationToken.IsCancellationRequested)
+                Task.FromCanceled<Page<ProductWithId>>(cancellationToken);
 
             int chosenPageNumber;
             Dictionary<int, Product> productsDictionary = new Dictionary<int, Product>();
@@ -42,13 +42,13 @@ namespace ProductService.Repositories
 
             page = new Page<ProductWithId>(totalElementsCount, totalPagesCount, chosenPageNumber, elementsOnPageCount, products);
 
-            return page;
+            return Task.FromResult(page);
         }
 
-        public ResultWithValue<Product> GetProduct(int id, CancellationToken cancellationToken = default)
+        public Task<ResultWithValue<Product>> GetProduct(int id, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
-                Task.FromCanceled(cancellationToken);
+                Task.FromCanceled<ResultWithValue<Product>>(cancellationToken);
 
             ResultWithValue<Product> result = new ResultWithValue<Product>();
 
@@ -63,13 +63,13 @@ namespace ProductService.Repositories
                 result.Message = "Продукт отсутствует в базе данных!";
             }
 
-            return result;
+            return Task.FromResult(result);
         }
 
-        public Result CreateProduct(Product product, CancellationToken cancellationToken = default)
+        public Task<Result> CreateProduct(Product product, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
-                Task.FromCanceled(cancellationToken);
+                Task.FromCanceled<Result>(cancellationToken);
 
             Result result = new Result();
             int localCounter = Interlocked.Increment(ref IdCounter);
@@ -86,13 +86,13 @@ namespace ProductService.Repositories
                 result.Message = "Не удалось добавить продукт, так как его имя уже используется!";
             }
 
-            return result;
+            return Task.FromResult(result);
         }
 
-        public Result UpdateProduct(int id, Product product, CancellationToken cancellationToken = default)
+        public Task<Result> UpdateProduct(int id, Product product, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
-                Task.FromCanceled(cancellationToken);
+                Task.FromCanceled<Result>(cancellationToken);
 
             Result result = new Result();
             bool isOperagtionComplited = false;
@@ -143,13 +143,13 @@ namespace ProductService.Repositories
                 }
             }
 
-            return result;
+            return Task.FromResult(result);
         }
 
-        public Result DeleteProduct(int id, CancellationToken cancellationToken = default)
+        public Task<Result> DeleteProduct(int id, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
-                Task.FromCanceled(cancellationToken);
+                Task.FromCanceled<Result>(cancellationToken);
 
             Result result = new Result();
 
@@ -165,7 +165,7 @@ namespace ProductService.Repositories
                 result.Message = $"Продукт с ID {id} отсутствует в базе данных!";
             }
 
-            return result;
+            return Task.FromResult(result);
         }
 
         private int GetFiltredProductsCount(string? nameFilter, uint? minPriceFilter, uint? maxPriceFilter)
