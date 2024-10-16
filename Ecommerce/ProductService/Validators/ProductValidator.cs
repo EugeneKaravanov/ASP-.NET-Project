@@ -12,7 +12,7 @@ namespace ProductService.Validators
         public ProductValidator() 
         {
             RuleFor(product => product.Name).NotEmpty().MaximumLength(maxNameLength);
-            //RuleFor(product => product.Price).GreaterThan(minPrice);
+            RuleFor(product => product.Price).GreaterThan(minPrice);
             RuleFor(product => product.Stock).GreaterThanOrEqualTo(minStock);
         }
     }
