@@ -103,11 +103,11 @@ namespace ProductService.Utilities
                 case Models.Status.Success:
                     return Ecommerce.Status.Success;
 
-                case Models.Status.Failure:
-                    return Ecommerce.Status.Failure;
+                case Models.Status.NotFound:
+                    return Ecommerce.Status.NotFound;
 
                 default:
-                    return Ecommerce.Status.NotFound;
+                    return Ecommerce.Status.Failure;
             }
         }
     }

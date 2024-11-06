@@ -14,7 +14,7 @@ namespace ProductService.Repositories
         public Task<Page<ProductWithId>> GetProductsAsync(GetProductsRequest request, CancellationToken cancellationToken = default)
         {
             if(cancellationToken.IsCancellationRequested)
-                Task.FromCanceled<Page<ProductWithId>>(cancellationToken);
+                return Task.FromCanceled<Page<ProductWithId>>(cancellationToken);
 
             int chosenPageNumber;
             Dictionary<int, Product> productsDictionary = new Dictionary<int, Product>();
@@ -48,7 +48,7 @@ namespace ProductService.Repositories
         public Task<ResultWithValue<Product>> GetProduct(int id, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
-                Task.FromCanceled<ResultWithValue<Product>>(cancellationToken);
+                return Task.FromCanceled<ResultWithValue<Product>>(cancellationToken);
 
             ResultWithValue<Product> result = new ResultWithValue<Product>();
 
@@ -69,7 +69,7 @@ namespace ProductService.Repositories
         public Task<Result> CreateProduct(Product product, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
-                Task.FromCanceled<Result>(cancellationToken);
+                return Task.FromCanceled<Result>(cancellationToken);
 
             Result result = new Result();
             int localCounter = Interlocked.Increment(ref IdCounter);
@@ -92,55 +92,39 @@ namespace ProductService.Repositories
         public Task<Result> UpdateProduct(int id, Product product, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
-                Task.FromCanceled<Result>(cancellationToken);
+                return Task.FromCanceled<Result>(cancellationToken);
 
             Result result = new Result();
-            bool isOperagtionComplited = false;
 
-            while (isOperagtionComplited == false)
+            if (_products.TryGetValue(id, out Product oldProduct) == false)
             {
-                if (cancellationToken.IsCancellationRequested)
-                    Task.FromCanceled(cancellationToken);
+                result.Status = Models.Status.NotFound;
+                result.Message = "Не удалсь обновить продукт, так как он отсутствует в базе данных!";
+            }
 
-                if (_products.TryGetValue(id, out Product oldProduct) == false)
-                {
-                    isOperagtionComplited = true;
-                    result.Status= Models.Status.NotFound;
-                    result.Message = "Не удалсь обновить продукт, так как он отсутствует в базе данных!";
+            if (oldProduct.Name == product.Name && _products.TryUpdate(id, product, oldProduct))
+            {
+                result.Status = Models.Status.Success;
+                result.Message = "Продукт успешно обновлен!";
+            }
 
-                    continue;
-                }
+            if (_usedNames.TryAdd(product.Name, product) == false)
+            {
+                result.Status = Models.Status.Failure;
+                result.Message = "Не удалось обновить продукт, так как его имя не уникально!";
+            }
 
-                if (oldProduct.Name == product.Name && _products.TryUpdate(id, product, oldProduct))
-                {
-                    isOperagtionComplited = true;
-                    result.Status = Models.Status.Success;
-                    result.Message = "Продукт успешно обновлен!";
-
-                    continue;
-                }
-
-                if (_usedNames.TryAdd(product.Name, product) == false)
-                {
-                    isOperagtionComplited = true;
-                    result.Status = Models.Status.Failure;
-                    result.Message = "Не удалось обновить продукт, так как его имя не уникально!";
-
-                    continue;
-                }
-
-                if (_products.TryUpdate(id, product, oldProduct))
-                {
-                    isOperagtionComplited = true;
-                    result.Status = Models.Status.Success;
-                    result.Message = "Продукт успешно обновлен!";
-
-                    continue;
-                }
-                else
-                {
-                    _usedNames.TryRemove(product.Name, out product);
-                }
+            if (_products.TryUpdate(id, product, oldProduct))
+            {
+                _usedNames.TryRemove(oldProduct.Name, out product);
+                result.Status = Models.Status.Success;
+                result.Message = "Продукт успешно обновлен!";
+            }
+            else
+            {
+                _usedNames.TryRemove(product.Name, out product);
+                result.Status = Models.Status.Failure;
+                result.Message = "Не удалось обновить продукт, так как за время операции в не произошли изменения";
             }
 
             return Task.FromResult(result);
@@ -149,7 +133,7 @@ namespace ProductService.Repositories
         public Task<Result> DeleteProduct(int id, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
-                Task.FromCanceled<Result>(cancellationToken);
+                return Task.FromCanceled<Result>(cancellationToken);
 
             Result result = new Result();
 

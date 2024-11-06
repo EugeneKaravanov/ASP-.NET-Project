@@ -52,7 +52,6 @@ namespace GatewayService.Controllers
         [HttpPost("products")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateProduct([FromBody] ProductDto productDto, CancellationToken cancellationToken)
         {
             ProductGRPC productGRPC = Mapper.TransferProductDtoToProdutctGRPC(productDto);
@@ -62,17 +61,10 @@ namespace GatewayService.Controllers
 
             string message = response.Message;
 
-            switch (response.Status)
-            {
-                case Ecommerce.Status.Success:
-                    return Ok(message);
-
-                case Ecommerce.Status.Failure:
-                    return Ok(message);
-
-                default:
-                    return BadRequest(message);
-            }
+            if (response.Status == Ecommerce.Status.Success)
+                return Ok(message);
+            else
+                return BadRequest(message);
         }
 
         [HttpPut("products/{id:int}")]
@@ -93,8 +85,8 @@ namespace GatewayService.Controllers
                 case Ecommerce.Status.Success:
                     return Ok(message);
 
-                case Ecommerce.Status.Failure:
-                    return Ok(message);
+                case Ecommerce.Status.NotFound:
+                    return NotFound(message);
 
                 default:
                     return BadRequest(message);

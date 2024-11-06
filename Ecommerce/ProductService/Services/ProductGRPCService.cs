@@ -22,7 +22,7 @@ namespace ProductService.Services
 
         public override async Task<GetProductsResponse> GetProducts(GetProductsRequest request, ServerCallContext context)
         {
-            PageGRPC pageGRPC = Mapper.TrasferPageToPageGRPC(_productRepository.GetProductsAsync(request, context.CancellationToken).Result);
+            PageGRPC pageGRPC = Mapper.TrasferPageToPageGRPC(await _productRepository.GetProductsAsync(request, context.CancellationToken));
             GetProductsResponse getProductsResponse = new GetProductsResponse();
 
             getProductsResponse.Page = pageGRPC;
@@ -33,7 +33,7 @@ namespace ProductService.Services
         public override async Task<GetProductResponse> GetProduct(GetProductRequest request, ServerCallContext context)
         {
             GetProductResponse response = new GetProductResponse();
-            ResultWithValue<Product> result = _productRepository.GetProduct(request.Id, context.CancellationToken).Result;
+            ResultWithValue<Product> result = await _productRepository.GetProduct(request.Id, context.CancellationToken);
 
             if (result.Status == Models.Status.Success)
             {
@@ -62,7 +62,7 @@ namespace ProductService.Services
 
             if (_productValidator.Validate(product).IsValid)
             {
-                Result result = _productRepository.CreateProduct(product, context.CancellationToken).Result;
+                Result result = await _productRepository.CreateProduct(product, context.CancellationToken);
                 
                 response.Status = Mapper.TransferResultStatusToResponseStatus(result.Status);
                 response.Message = result.Message;
@@ -93,7 +93,7 @@ namespace ProductService.Services
                 return response;
             }
 
-            result = _productRepository.UpdateProduct(id, product, context.CancellationToken).Result;
+            result = await _productRepository.UpdateProduct(id, product, context.CancellationToken);
             response.Status = Mapper.TransferResultStatusToResponseStatus(result.Status);
             response.Message = result.Message;
 
@@ -103,7 +103,7 @@ namespace ProductService.Services
         public override async Task<OperationStatusResponse> DeleteProduct(DeleteProductRequest request, ServerCallContext context)
         {
             OperationStatusResponse response = new OperationStatusResponse();
-            Result result = _productRepository.DeleteProduct(request.Id, context.CancellationToken).Result;
+            Result result = await _productRepository.DeleteProduct(request.Id, context.CancellationToken);
 
             response.Status = Mapper.TransferResultStatusToResponseStatus(result.Status);
             response.Message = result.Message;
