@@ -56,14 +56,16 @@ namespace ProductService.Repositories
             {
                 result.Status = Models.Status.Success;
                 result.Value = product;
+
+                return Task.FromResult(result);
             }
             else
             {
                 result.Status = Models.Status.NotFound;
                 result.Message = "Продукт отсутствует в базе данных!";
-            }
 
-            return Task.FromResult(result);
+                return Task.FromResult(result);
+            }
         }
 
         public Task<Result> CreateProduct(Product product, CancellationToken cancellationToken = default)
@@ -79,14 +81,16 @@ namespace ProductService.Repositories
                 _products.TryAdd(localCounter, product);
                 result.Status = Models.Status.Success;
                 result.Message = "Продукт успешно добавлен!";
+
+                return Task.FromResult(result);
             }
             else
             {
                 result.Status = Models.Status.Failure;
                 result.Message = "Не удалось добавить продукт, так как его имя уже используется!";
-            }
 
-            return Task.FromResult(result);
+                return Task.FromResult(result);
+            }
         }
 
         public Task<Result> UpdateProduct(int id, Product product, CancellationToken cancellationToken = default)
@@ -100,18 +104,24 @@ namespace ProductService.Repositories
             {
                 result.Status = Models.Status.NotFound;
                 result.Message = "Не удалсь обновить продукт, так как он отсутствует в базе данных!";
+
+                return Task.FromResult(result);
             }
 
             if (oldProduct.Name == product.Name && _products.TryUpdate(id, product, oldProduct))
             {
                 result.Status = Models.Status.Success;
                 result.Message = "Продукт успешно обновлен!";
+
+                return Task.FromResult(result);
             }
 
             if (_usedNames.TryAdd(product.Name, product) == false)
             {
                 result.Status = Models.Status.Failure;
                 result.Message = "Не удалось обновить продукт, так как его имя не уникально!";
+
+                return Task.FromResult(result);
             }
 
             if (_products.TryUpdate(id, product, oldProduct))
@@ -119,15 +129,17 @@ namespace ProductService.Repositories
                 _usedNames.TryRemove(oldProduct.Name, out product);
                 result.Status = Models.Status.Success;
                 result.Message = "Продукт успешно обновлен!";
+
+                return Task.FromResult(result);
             }
             else
             {
                 _usedNames.TryRemove(product.Name, out product);
                 result.Status = Models.Status.Failure;
                 result.Message = "Не удалось обновить продукт, так как за время операции в не произошли изменения";
-            }
 
-            return Task.FromResult(result);
+                return Task.FromResult(result);
+            }
         }
 
         public Task<Result> DeleteProduct(int id, CancellationToken cancellationToken = default)
@@ -142,14 +154,16 @@ namespace ProductService.Repositories
                 _usedNames.TryRemove(product.Name, out Product value);
                 result.Status = Models.Status.Success;
                 result.Message = "Продукт успешно удален!";
+
+                return Task.FromResult(result);
             }
             else
             {
                 result.Status = Models.Status.NotFound;
                 result.Message = $"Продукт с ID {id} отсутствует в базе данных!";
-            }
 
-            return Task.FromResult(result);
+                return Task.FromResult(result);
+            }
         }
 
         private int GetFiltredProductsCount(string? nameFilter, uint? minPriceFilter, uint? maxPriceFilter)
