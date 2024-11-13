@@ -20,16 +20,26 @@ namespace ProductService.Services
             _productValidator = productValidator;
         }
 
+        public override async Task<GetProductsResponse> GetProducts(GetProductsRequest request, ServerCallContext context)
+        {
+            PageGRPC pageGRPC = Mapper.TrasferPageToPageGRPC(await _productRepository.GetProductsAsync(request, context.CancellationToken));
+            GetProductsResponse getProductsResponse = new GetProductsResponse();
+
+            getProductsResponse.Page = pageGRPC;
+
+            return getProductsResponse;
+        }
+
         public override async Task<GetProductResponse> GetProduct(GetProductRequest request, ServerCallContext context)
         {
-            Product product;
             GetProductResponse response = new GetProductResponse();
+            ResultWithValue<Product> result = await _productRepository.GetProduct(request.Id, context.CancellationToken);
 
-            if (_productRepository.GetProduct(request.Id, out product))
+            if (result.Status == Models.Status.Success)
             {
                 GetProductResponse.Types.ProductFound foundedResult = new GetProductResponse.Types.ProductFound();
 
-                foundedResult.Product = Mapper.TransferProductToProductGrpc(product);
+                foundedResult.Product = Mapper.TransferProductToProductGrpc(result.Value);
                 response.Found = foundedResult;
 
                 return response;
@@ -38,21 +48,11 @@ namespace ProductService.Services
             {
                 GetProductResponse.Types.ProductNotFound notFoundedResult = new GetProductResponse.Types.ProductNotFound();
 
-                notFoundedResult.Message = $"Продукт с ID {request.Id} отсутствует в базе данных";
+                notFoundedResult.Message = result.Message;
                 response.NotFound = notFoundedResult;
 
                 return response;
             }
-        }
-
-        public override async Task<GetProductsResponse> GetProducts(GetProductsRequest request, ServerCallContext context)
-        {
-            PageGRPC pageGRPC = Mapper.TrasferPageToPageGRPC(_productRepository.GetProducts(request));
-            GetProductsResponse getProductsResponse = new GetProductsResponse();
-
-            getProductsResponse.Page = pageGRPC;
-
-            return getProductsResponse;
         }
 
         public override async Task<OperationStatusResponse> CreateProduct(CreateProductRequest request, ServerCallContext context)
@@ -62,9 +62,10 @@ namespace ProductService.Services
 
             if (_productValidator.Validate(product).IsValid)
             {
-                _productRepository.CreateProduct(product);
-                response.Status = Status.Success;
-                response.Message = "Продукт успешно добавлен!";
+                Result result = await _productRepository.CreateProduct(product, context.CancellationToken);
+                
+                response.Status = Mapper.TransferResultStatusToResponseStatus(result.Status);
+                response.Message = result.Message;
 
                 return response;
             }
@@ -80,26 +81,21 @@ namespace ProductService.Services
         public override async Task<OperationStatusResponse> UpdateProduct(UpdateProductRequest request, ServerCallContext context)
         {
             int id;
+            Result result;
             Product product = Mapper.TransferProductWithIdGRPCToProductAndId(request.Product, out id);
             OperationStatusResponse response = new OperationStatusResponse();
 
             if (_productValidator.Validate(product).IsValid == false)
             {
                 response.Status = Status.Failure;
-                response.Message = $"Не удалось получить продукт с ID {id}!";
+                response.Message = $"Не удалось обновить продукт с ID {id}, так как изменения не прошли валидацию!";
+
                 return response;
             }
 
-            if (_productRepository.UpdateProduct(id, product))
-            {
-                response.Status = Status.Success;
-                response.Message = "Продукт успешно обновлен!";
-            }
-            else
-            {
-                response.Status = Status.Failure;
-                response.Message = $"Не удалось получить продукт с ID {id}!";
-            }
+            result = await _productRepository.UpdateProduct(id, product, context.CancellationToken);
+            response.Status = Mapper.TransferResultStatusToResponseStatus(result.Status);
+            response.Message = result.Message;
 
             return response;
         }
@@ -107,21 +103,12 @@ namespace ProductService.Services
         public override async Task<OperationStatusResponse> DeleteProduct(DeleteProductRequest request, ServerCallContext context)
         {
             OperationStatusResponse response = new OperationStatusResponse();
+            Result result = await _productRepository.DeleteProduct(request.Id, context.CancellationToken);
 
-            if (_productRepository.DeleteProduct(request.Id))
-            {
-                response.Status = Status.Success;
-                response.Message = "Продукт успешно удален!";
+            response.Status = Mapper.TransferResultStatusToResponseStatus(result.Status);
+            response.Message = result.Message;
 
-                return response;
-            }
-            else
-            {
-                response.Status = Status.Failure;
-                response.Message = $"Продукт с ID {request.Id} отсутствует в базе данных!";
-
-                return response;
-            }
+            return response;
         }
     }
 }

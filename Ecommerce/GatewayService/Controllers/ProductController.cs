@@ -16,10 +16,11 @@ namespace GatewayService.Controllers
         }
 
         [HttpGet("products")]
-        public async Task<PageDto<ProductWithIdDto>> GetProducts(Models.GetProductsRequestDto getProductsRequestDto)
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        public async Task<PageDto<ProductWithIdDto>> GetProducts(Models.GetProductsRequestDto getProductsRequestDto, CancellationToken cancellationToken)
         {
             GetProductsRequest request = Mapper.TransferGetProductsRequestDtoToGetProductsRequest(getProductsRequestDto);
-            GetProductsResponse response = await _productServiceClient.GetProductsAsync(request);
+            GetProductsResponse response = await _productServiceClient.GetProductsAsync(request, cancellationToken: cancellationToken);
 
             PageDto<ProductWithIdDto> pageDto = Mapper.TransferPageGRPCToPageDto(response.Page);
 
@@ -29,10 +30,10 @@ namespace GatewayService.Controllers
         [HttpGet("products/{id:int}")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetProduct(int id)
+        public async Task<IActionResult> GetProduct(int id, CancellationToken cancellationToken)
         {
             GetProductRequest request = new GetProductRequest { Id = id };
-            GetProductResponse response = await _productServiceClient.GetProductAsync(request);
+            GetProductResponse response = await _productServiceClient.GetProductAsync(request, cancellationToken: cancellationToken);
 
             if (response.ResultCase == GetProductResponse.ResultOneofCase.Found)
             {
@@ -51,64 +52,64 @@ namespace GatewayService.Controllers
         [HttpPost("products")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateProduct([FromBody] ProductDto productDto)
+        public async Task<IActionResult> CreateProduct([FromBody] ProductDto productDto, CancellationToken cancellationToken)
         {
             ProductGRPC productGRPC = Mapper.TransferProductDtoToProdutctGRPC(productDto);
 
             CreateProductRequest request = new CreateProductRequest { Product = productGRPC };
-            OperationStatusResponse response = await _productServiceClient.CreateProductAsync(request);
+            OperationStatusResponse response = await _productServiceClient.CreateProductAsync(request, cancellationToken: cancellationToken);
 
             string message = response.Message;
 
-            if (response.Status == Status.Success)
-            {
+            if (response.Status == Ecommerce.Status.Success)
                 return Ok(message);
-            }
             else
-            {
                 return BadRequest(message);
-            }
         }
 
         [HttpPut("products/{id:int}")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductDto productDto)
+        [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductDto productDto, CancellationToken cancellationToken)
         {
             ProductWithIdGRPC productWithIdGRPC = Mapper.TransferProductDtoAndIdToProductWithIdGRPC(id, productDto);
 
             UpdateProductRequest request = new UpdateProductRequest { Product = productWithIdGRPC };
-            OperationStatusResponse response = await _productServiceClient.UpdateProductAsync(request);
+            OperationStatusResponse response = await _productServiceClient.UpdateProductAsync(request, cancellationToken: cancellationToken);
 
             string message = response.Message;
 
-            if (response.Status == Status.Success)
+            switch (response.Status)
             {
-                return Ok(message);
-            }
-            else
-            {
-                return BadRequest(message);
+                case Ecommerce.Status.Success:
+                    return Ok(message);
+
+                case Ecommerce.Status.NotFound:
+                    return NotFound(message);
+
+                default:
+                    return BadRequest(message);
             }
         }
 
         [HttpDelete("products/{id:int}")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> DeleteProduct(int id)
+        [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteProduct(int id, CancellationToken cancellationToken)
         {
             DeleteProductRequest request = new DeleteProductRequest { Id = id };
-            OperationStatusResponse response = await _productServiceClient.DeleteProductAsync(request);
+            OperationStatusResponse response = await _productServiceClient.DeleteProductAsync(request, cancellationToken: cancellationToken);
 
             string message = response.Message;
 
-            if (response.Status == Status.Success)
+            if (response.Status == Ecommerce.Status.Success)
             {
                 return Ok(message);
             }
             else
             {
-                return BadRequest(message);
+                return NotFound(message);
             }
         }
     }

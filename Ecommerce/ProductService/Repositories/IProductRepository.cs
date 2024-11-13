@@ -5,14 +5,14 @@ namespace ProductService.Repositories
 {
     public interface IProductRepository
     {
-        public Page<ProductWithId> GetProducts(GetProductsRequest getProductsRequest);
+        public Task<Page<ProductWithId>> GetProductsAsync(GetProductsRequest getProductsRequest, CancellationToken cancellationToken = default);
 
-        public bool GetProduct(int id, out Product product);
+        public Task<ResultWithValue<Product>> GetProduct(int id, CancellationToken cancellationToken = default);
 
-        public void CreateProduct(Product product);
+        public Task<Result> CreateProduct(Product product, CancellationToken cancellationToken = default);
 
-        public bool UpdateProduct(int id, Product product);
+        public Task<Result> UpdateProduct(int id, Product product, CancellationToken cancellationToken = default);
 
-        public bool DeleteProduct(int id);
+        public Task<Result> DeleteProduct(int id, CancellationToken cancellationToken = default);
     }
 }
