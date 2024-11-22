@@ -45,17 +45,17 @@ namespace ProductService.Repositories
             return Task.FromResult(page);
         }
 
-        public Task<ResultWithValue<Product>> GetProduct(int id, CancellationToken cancellationToken = default)
+        public Task<ResultWithValue<ProductWithId>> GetProduct(int id, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
-                return Task.FromCanceled<ResultWithValue<Product>>(cancellationToken);
+                return Task.FromCanceled<ResultWithValue<ProductWithId>>(cancellationToken);
 
-            ResultWithValue<Product> result = new ResultWithValue<Product>();
+            ResultWithValue<ProductWithId> result = new ResultWithValue<ProductWithId>();
 
             if (_products.TryGetValue(id, out Product product))
             {
                 result.Status = Models.Status.Success;
-                result.Value = product;
+                result.Value = Mapper.TansferProductAndIdToProductWithId(id, product);
 
                 return Task.FromResult(result);
             }

@@ -7,7 +7,7 @@ namespace ProductService.Repositories
     {
         public Task<Page<ProductWithId>> GetProductsAsync(GetProductsRequest getProductsRequest, CancellationToken cancellationToken = default);
 
-        public Task<ResultWithValue<Product>> GetProduct(int id, CancellationToken cancellationToken = default);
+        public Task<ResultWithValue<ProductWithId>> GetProduct(int id, CancellationToken cancellationToken = default);
 
         public Task<Result> CreateProduct(Product product, CancellationToken cancellationToken = default);
 

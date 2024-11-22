@@ -1,14 +1,7 @@
-﻿using System.Diagnostics.Metrics;
-
-namespace ProductService.Models
+﻿namespace ProductService.Models
 {
     public class Product
     {
-        public Product()
-        {
-
-        }
-
         public string Name { get; set; }
         public string Description { get; set; }
         public decimal Price { get; set; }

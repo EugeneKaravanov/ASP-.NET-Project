@@ -33,13 +33,13 @@ namespace ProductService.Services
         public override async Task<GetProductResponse> GetProduct(GetProductRequest request, ServerCallContext context)
         {
             GetProductResponse response = new GetProductResponse();
-            ResultWithValue<Product> result = await _productRepository.GetProduct(request.Id, context.CancellationToken);
+            ResultWithValue<ProductWithId> result = await _productRepository.GetProduct(request.Id, context.CancellationToken);
 
             if (result.Status == Models.Status.Success)
             {
                 GetProductResponse.Types.ProductFound foundedResult = new GetProductResponse.Types.ProductFound();
 
-                foundedResult.Product = Mapper.TransferProductToProductGrpc(result.Value);
+                foundedResult.Product = Mapper.TransferProductWithIdToProductGrpc(result.Value);
                 response.Found = foundedResult;
 
                 return response;
@@ -57,7 +57,7 @@ namespace ProductService.Services
 
         public override async Task<OperationStatusResponse> CreateProduct(CreateProductRequest request, ServerCallContext context)
         {
-            Product product = Mapper.TransferProductGRPCToProduct(request.Product);
+            Product product = Mapper.TransferProductGRPCToProductAndId(request.Product, out int id);
             OperationStatusResponse response = new OperationStatusResponse();
 
             if (_productValidator.Validate(product).IsValid)
@@ -82,7 +82,7 @@ namespace ProductService.Services
         {
             int id;
             Result result;
-            Product product = Mapper.TransferProductWithIdGRPCToProductAndId(request.Product, out id);
+            Product product = Mapper.TransferProductGRPCToProductAndId(request.Product, out id);
             OperationStatusResponse response = new OperationStatusResponse();
 
             if (_productValidator.Validate(product).IsValid == false)

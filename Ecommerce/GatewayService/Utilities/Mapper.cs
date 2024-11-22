@@ -7,18 +7,6 @@ namespace GatewayService.Utilities
 {
     internal class Mapper
     {
-        internal static ProductDto TransferProductGRPCToProductDto(ProductGRPC productGrpc)
-        {
-            ProductDto product = new ProductDto();
-
-            product.Name = productGrpc.Name;
-            product.Description = productGrpc.Description;
-            product.Price = Converter.ConvertMoneyToDecimal(productGrpc.Price);
-            product.Stock = productGrpc.Stock;
-
-            return product;
-        }
-
         internal static ProductGRPC TransferProductDtoToProdutctGRPC(ProductDto productDto)
         {
             ProductGRPC productInfo = new ProductGRPC();
@@ -31,30 +19,30 @@ namespace GatewayService.Utilities
             return productInfo;
         }
 
-        internal static ProductWithIdDto TransferProductWithIdGRPCToProdutctWithIdDto(ProductWithIdGRPC productWithIdGrpc)
+        internal static ProductWithIdDto TransferProductGRPCToProdutctWithIdDto(ProductGRPC productGrpc)
         {
             ProductWithIdDto productWithIdDto = new ProductWithIdDto();
 
-            productWithIdDto.Id = productWithIdGrpc.Id;
-            productWithIdDto.Name = productWithIdGrpc.Name;
-            productWithIdDto.Description = productWithIdGrpc.Description;
-            productWithIdDto.Price = Converter.ConvertMoneyToDecimal(productWithIdGrpc.Price);
-            productWithIdDto.Stock = productWithIdGrpc.Stock;
+            productWithIdDto.Id = productGrpc.Id;
+            productWithIdDto.Name = productGrpc.Name;
+            productWithIdDto.Description = productGrpc.Description;
+            productWithIdDto.Price = Converter.ConvertMoneyToDecimal(productGrpc.Price);
+            productWithIdDto.Stock = productGrpc.Stock;
 
             return productWithIdDto;
         }
 
-        internal static ProductWithIdGRPC TransferProductDtoAndIdToProductWithIdGRPC(int id, ProductDto productDto)
+        internal static ProductGRPC TransferProductDtoAndIdToProductGRPC(int id, ProductDto productDto)
         {
-            ProductWithIdGRPC productWithIdGRPC = new ProductWithIdGRPC();
+            ProductGRPC productGrpc = new ProductGRPC();
 
-            productWithIdGRPC.Id = id;
-            productWithIdGRPC.Name = productDto.Name;
-            productWithIdGRPC.Description = productDto.Description;
-            productWithIdGRPC.Price = Converter.ConvertDecimalToMoney(productDto.Price);
-            productDto.Stock = productWithIdGRPC.Stock;
+            productGrpc.Id = id;
+            productGrpc.Name = productDto.Name;
+            productGrpc.Description = productDto.Description;
+            productGrpc.Price = Converter.ConvertDecimalToMoney(productDto.Price);
+            productDto.Stock = productGrpc.Stock;
 
-            return productWithIdGRPC;
+            return productGrpc;
         }
 
         internal static GetProductsRequest TransferGetProductsRequestDtoToGetProductsRequest(GetProductsRequestDto getProductsRequestDto)
@@ -83,8 +71,8 @@ namespace GatewayService.Utilities
             pageDto.ElementOnPageCount = pageGrpc.ElementsOnPageCount;
             pageDto.Products = new List<ProductWithIdDto>();
             
-            foreach (ProductWithIdGRPC productWithIdGRPC in pageGrpc.Products)
-                pageDto.Products.Add(TransferProductWithIdGRPCToProdutctWithIdDto(productWithIdGRPC));
+            foreach (ProductGRPC productWithIdGRPC in pageGrpc.Products)
+                pageDto.Products.Add(TransferProductGRPCToProdutctWithIdDto(productWithIdGRPC));
 
             return pageDto;
         }

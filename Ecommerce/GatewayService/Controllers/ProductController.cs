@@ -37,7 +37,7 @@ namespace GatewayService.Controllers
 
             if (response.ResultCase == GetProductResponse.ResultOneofCase.Found)
             {
-                ProductDto result = Mapper.TransferProductGRPCToProductDto(response.Found.Product);
+                ProductWithIdDto result = Mapper.TransferProductGRPCToProdutctWithIdDto(response.Found.Product);
 
                 return Ok(result);
             }
@@ -73,7 +73,7 @@ namespace GatewayService.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductDto productDto, CancellationToken cancellationToken)
         {
-            ProductWithIdGRPC productWithIdGRPC = Mapper.TransferProductDtoAndIdToProductWithIdGRPC(id, productDto);
+            ProductGRPC productWithIdGRPC = Mapper.TransferProductDtoAndIdToProductGRPC(id, productDto);
 
             UpdateProductRequest request = new UpdateProductRequest { Product = productWithIdGRPC };
             OperationStatusResponse response = await _productServiceClient.UpdateProductAsync(request, cancellationToken: cancellationToken);

@@ -1,0 +1,6 @@
+@NewGateWayService_HostAddress = http://localhost:5174
+
+GET {{NewGateWayService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -38,7 +38,7 @@ message CreateProductRequest
 
 message UpdateProductRequest 
 {
-  ProductWithIdGRPC product = 1;
+  ProductGRPC product = 1;
 }
 
 message DeleteProductRequest 
@@ -78,19 +78,11 @@ message OperationStatusResponse
 
 message ProductGRPC 
 {
-  string name = 1;
-  string description = 2;
-  google.type.Money price = 3;
-  int32 stock = 4;
-}
-
-message ProductWithIdGRPC
-{
-    int32 id = 1;
-    string name = 2;
-    string description = 3;
-    google.type.Money price = 4;
-    int32 stock = 5;
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  google.type.Money price = 4;
+  int32 stock = 5;
 }
 
 message PageGRPC
@@ -99,7 +91,7 @@ message PageGRPC
     int32 total_pages_count = 2;
     int32 choosen_page_number = 3;
     int32 elements_on_page_count = 4;
-    repeated ProductWithIdGRPC products = 5;
+    repeated ProductGRPC products = 5;
 }
 
 enum Status 

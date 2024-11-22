@@ -3,18 +3,16 @@ using ProductService.Validators;
 using ProductService.Services;
 using System.Data;
 using Npgsql;
-using FluentMigrator.Runner.Processors;
 using FluentMigrator.Runner;
-using System.Reflection;
 using ProductService.Migrations;
 
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddSingleton<IProductRepository, InMemoryProductRepository>();
+builder.Services.AddSingleton<IProductRepository, ProductRepository>(_ => new (connectionString));
 builder.Services.AddSingleton<ProductValidator>();
 builder.Services.AddScoped<IDbConnection>(_ =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     return new NpgsqlConnection(connectionString);
 });
 
