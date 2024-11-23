@@ -2,6 +2,9 @@
 using ProductService.Models;
 using Dapper;
 using Npgsql;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Transactions;
+using ProductService.Utilities;
 
 namespace ProductService.Repositories
 {
@@ -25,8 +28,8 @@ namespace ProductService.Repositories
 
             ResultWithValue<ProductWithId> result = new ResultWithValue<ProductWithId>();
             ProductWithId productWithId = null;
-            string sqlString = $"SELECT * FROM Products WHERE id = @Id";
-            await using var conection = new NpgsqlConnection(_connectionString);
+            string sqlString = $"SELECT 1 FROM Products WHERE id = @Id";
+            using var conection = new NpgsqlConnection(_connectionString);
 
             await conection.OpenAsync(cancellationToken);
             productWithId = await conection.QuerySingleOrDefaultAsync<ProductWithId>(sqlString, new {Id = id});
@@ -62,7 +65,7 @@ namespace ProductService.Repositories
                                 )
                                 SELECT id FROM insert_result";
 
-            await using var conection = new NpgsqlConnection(_connectionString);
+            using var conection = new NpgsqlConnection(_connectionString);
 
             await conection.OpenAsync(cancellationToken);
             int? insertId = await conection.QuerySingleOrDefaultAsync<int?>(sqlString, product);
@@ -85,7 +88,51 @@ namespace ProductService.Repositories
 
         public async Task<Result> UpdateProduct(int id, Product product, CancellationToken cancellationToken = default)
         {
-            return null;
+            Result result = new Result();
+            ProductWithId productWithId = Mapper.TansferProductAndIdToProductWithId(id, product);
+            string sqlString = @"WITH update_result AS
+                                    (
+                                    UPDATE Products SET
+                                        Name = @Name,
+                                        Description = @Description,
+                                        Price = @Price,
+                                        Stock = @Stock
+                                        WHERE Id = @Id
+                                        RETURNING Id
+                                     )
+                                SELECT CASE 
+                                    WHEN EXISTS (SELECT 1 FROM update_result) THEN 'SUCCESS'
+                                END;";
+
+            using var conection = new NpgsqlConnection(_connectionString);
+            await conection.OpenAsync(cancellationToken);
+
+            try
+            {
+                string? updateStatus = await conection.QuerySingleOrDefaultAsync<string?>(sqlString, productWithId);
+
+                if (updateStatus == "SUCCESS")
+                {
+                    result.Status = Models.Status.Success;
+                    result.Message = "Продукт успешно добавлен!";
+
+                    return result;
+                }
+                else
+                {
+                    result.Status = Models.Status.NotFound;
+                    result.Message = $"Продукт c ID {id} отсутствует в базе данных!";
+
+                    return result;
+                }
+            }
+            catch
+            {
+                result.Status = Models.Status.Failure;
+                result.Message = "Не удалось обновить продукт, так как его имя уже используется!";
+
+                return result;
+            }
         }
 
         public async Task<Result> DeleteProduct(int id, CancellationToken cancellationToken = default)
@@ -102,7 +149,7 @@ namespace ProductService.Repositories
                                 )
                                 SELECT id FROM delete_result";
 
-            await using var conection = new NpgsqlConnection(_connectionString);
+            using var conection = new NpgsqlConnection(_connectionString);
 
             await conection.OpenAsync(cancellationToken);
             int? deleteId = await conection.QuerySingleOrDefaultAsync<int?>(sqlString, new {Id = id});

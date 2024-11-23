@@ -40,7 +40,7 @@ namespace GatewayService.Utilities
             productGrpc.Name = productDto.Name;
             productGrpc.Description = productDto.Description;
             productGrpc.Price = Converter.ConvertDecimalToMoney(productDto.Price);
-            productDto.Stock = productGrpc.Stock;
+            productGrpc.Stock = productDto.Stock;
 
             return productGrpc;
         }
