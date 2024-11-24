@@ -33,7 +33,14 @@ namespace ProductService.Repositories
             await conection.OpenAsync(cancellationToken);
 
             var transaction = conection.BeginTransaction(System.Data.IsolationLevel.RepeatableRead);
-            int totalElementsCount =  await conection.QuerySingleAsync<int>(sqlStringToGetFiltredProductsCount, new { NameFilter = $"%{request.NameFilter}%", MinPriceFilter = (int)request.MinPriceFilter, MaxPriceFilter = (int)request.MaxPriceFilter }, transaction);
+            int totalElementsCount =  await conection.QuerySingleAsync<int>(sqlStringToGetFiltredProductsCount, 
+                new 
+                {
+                    NameFilter = $"%{request.NameFilter}%",
+                    MinPriceFilter = (int)request.MinPriceFilter, 
+                    MaxPriceFilter = (int)request.MaxPriceFilter 
+                }, 
+                transaction);
             int elementsOnPageCount = request.ElementsOnPageCount > 0 ? request.ElementsOnPageCount : 1;
             int totalPagesCount = (int)Math.Ceiling(totalElementsCount / (double)elementsOnPageCount);
 
@@ -55,7 +62,17 @@ namespace ProductService.Repositories
                     sqlStringToGetProductsOnPage += @"SELECT * FROM filtred_products ORDER BY @SortArgument DESC OFFSET @SkipCount LIMIT @Count;";
             }
 
-            var tempProducts = await conection.QueryAsync<ProductWithId>(sqlStringToGetProductsOnPage, new { NameFilter = $"%{request.NameFilter}%", MinPriceFilter = (int)request.MinPriceFilter, MaxPriceFilter = (int)request.MaxPriceFilter, SortArgument = request.SortArgument, SkipCount = elementsOnPageCount * (chosenPageNumber - 1), Count = elementsOnPageCount}, transaction);
+            var tempProducts = await conection.QueryAsync<ProductWithId>(sqlStringToGetProductsOnPage, 
+                new 
+                { 
+                        NameFilter = $"%{request.NameFilter}%", 
+                        MinPriceFilter = (int)request.MinPriceFilter, 
+                        MaxPriceFilter = (int)request.MaxPriceFilter, 
+                        SortArgument = request.SortArgument, 
+                        SkipCount = elementsOnPageCount * (chosenPageNumber - 1), 
+                        Count = elementsOnPageCount
+                }, 
+                transaction);
 
             transaction.Commit();
 
