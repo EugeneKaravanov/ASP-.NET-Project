@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+    <Folder Include="Models\" />
+    <Folder Include="Services\" />
+    <Folder Include="Utilities\" />
+    <Folder Include="Validators\" />
+    <Folder Include="Repositories\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Protos\ProductService.proto">
+      <GrpcServices>Service</GrpcServices>
+      <AdditionalImportDirs>Protos\googleapis</AdditionalImportDirs>
+    </None>
+  </ItemGroup>
+
+</Project>
