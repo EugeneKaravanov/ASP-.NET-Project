@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Protos\ProductService.proto">
+    <None Update="Protos\OrderService.proto">
       <GrpcServices>Service</GrpcServices>
       <AdditionalImportDirs>Protos\googleapis</AdditionalImportDirs>
     </None>
