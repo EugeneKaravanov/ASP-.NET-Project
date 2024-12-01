@@ -3,6 +3,7 @@ using ProductService.Models;
 using Dapper;
 using Npgsql;
 using ProductService.Utilities;
+using Azure.Core;
 
 namespace ProductService.Repositories
 {
@@ -19,7 +20,6 @@ namespace ProductService.Repositories
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            Page<ProductWithId> page;
             int chosenPageNumber;
             string sqlStringToCreateFiltredProductsCTE = @"WITH filtred_products AS (
                                                             SELECT * FROM Products 
@@ -50,17 +50,7 @@ namespace ProductService.Repositories
                 chosenPageNumber = totalPagesCount;
             else chosenPageNumber = request.ChoosenPageNumber;
 
-            if (request.SortArgument != "Name" && request.SortArgument != "Price")
-            {
-                sqlStringToGetProductsOnPage += @"SELECT * FROM filtred_products OFFSET @SkipCount LIMIT @Count;";
-            }
-            else
-            {
-                if (request.IsReverseSort == false)
-                    sqlStringToGetProductsOnPage += @"SELECT * FROM filtred_products ORDER BY @SortArgument OFFSET @SkipCount LIMIT @Count;";
-                else 
-                    sqlStringToGetProductsOnPage += @"SELECT * FROM filtred_products ORDER BY @SortArgument DESC OFFSET @SkipCount LIMIT @Count;";
-            }
+            sqlStringToGetProductsOnPage = FormSqlStringToGetProductsOnPage(sqlStringToGetProductsOnPage, request.SortArgument, request.IsReverseSort);
 
             var tempProducts = await conection.QueryAsync<ProductWithId>(sqlStringToGetProductsOnPage, 
                 new 
@@ -77,9 +67,8 @@ namespace ProductService.Repositories
             transaction.Commit();
 
             List<ProductWithId> products = tempProducts.ToList();
-            page = new Page<ProductWithId>(totalElementsCount, totalPagesCount, chosenPageNumber, elementsOnPageCount, products);
 
-            return page;
+            return new Page<ProductWithId>(totalElementsCount, totalPagesCount, chosenPageNumber, elementsOnPageCount, products);
         }
 
         public async Task<ResultWithValue<ProductWithId>> GetProduct(int id, CancellationToken cancellationToken = default)
@@ -227,6 +216,21 @@ namespace ProductService.Repositories
                 result.Message = $"Не удалось удалить продукт, так как продукта с ID {id} несуществует!";
 
                 return result;
+            }
+        }
+
+        private string FormSqlStringToGetProductsOnPage(string baseString, string sortArgument, bool isReverseSort)
+        {
+            if (sortArgument != "Name" && sortArgument != "Price")
+            {
+                return baseString + @"SELECT * FROM filtred_products OFFSET @SkipCount LIMIT @Count;";
+            }
+            else
+            {
+                if (isReverseSort == false)
+                    return baseString + @"SELECT * FROM filtred_products ORDER BY @SortArgument OFFSET @SkipCount LIMIT @Count;";
+                else
+                    return baseString + @"SELECT * FROM filtred_products ORDER BY @SortArgument DESC OFFSET @SkipCount LIMIT @Count;";
             }
         }
     }
