@@ -88,7 +88,7 @@ namespace ProductService.Repositories
 
             ResultWithValue<ProductWithId> result = new ResultWithValue<ProductWithId>();
             ProductWithId productWithId = null;
-            string sqlString = "SELECT 1 FROM Products WHERE id = @Id";
+            string sqlString = "SELECT * FROM Products WHERE id = @Id LIMIT 1";
             using var conection = new NpgsqlConnection(_connectionString);
 
             await conection.OpenAsync(cancellationToken);
@@ -186,7 +186,7 @@ namespace ProductService.Repositories
                     return result;
                 }
             }
-            catch (NpgsqlException ex)
+            catch (NpgsqlException ex) when (ex.SqlState == "23505")
             {
                 result.Status = Models.Status.Failure;
                 result.Message = "Не удалось обновить продукт, так как его имя уже используется!";
