@@ -16,10 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Protos\OrderService.proto">
-      <GrpcServices>Service</GrpcServices>
-      <AdditionalImportDirs>Protos\googleapis</AdditionalImportDirs>
-    </None>
+	  <Protobuf Include="Protos\OrderServiceGRPC.proto" GrpcServices="Service" AdditionalImportDirs="Protos\googleapis" />
+	  <Protobuf Include="Protos\googleapis\google\type\money.proto" />
   </ItemGroup>
 
 </Project>

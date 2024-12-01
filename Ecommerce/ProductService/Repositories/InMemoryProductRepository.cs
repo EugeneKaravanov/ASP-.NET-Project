@@ -1,4 +1,4 @@
-﻿using Ecommerce;
+﻿using ProductServiceGRPC;
 using ProductService.Models;
 using ProductService.Utilities;
 using System.Collections.Concurrent;

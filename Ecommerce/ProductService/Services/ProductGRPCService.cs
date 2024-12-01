@@ -1,15 +1,15 @@
-﻿using Ecommerce;
+﻿using ProductServiceGRPC;
 using Grpc.Core;
 using ProductService.Models;
 using ProductService.Repositories;
 using ProductService.Utilities;
 using ProductService.Validators;
-using static Ecommerce.ProductService;
-using Status = Ecommerce.Status;
+using static ProductServiceGRPC.ProductServiceGRPC;
+using Status = ProductServiceGRPC.Status;
 
 namespace ProductService.Services
 {
-    public class ProductGRPCService : ProductServiceBase
+    public class ProductGRPCService : ProductServiceGRPCBase
     {
         private readonly IProductRepository _productRepository;
         private readonly ProductValidator _productValidator;

@@ -1,4 +1,4 @@
-﻿using Ecommerce;
+﻿using ProductServiceGRPC;
 using GatewayService.Models;
 using ProductService.Models;
 using ProductService;

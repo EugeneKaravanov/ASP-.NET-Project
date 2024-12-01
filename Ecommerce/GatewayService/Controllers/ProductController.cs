@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Ecommerce;
+using ProductServiceGRPC;
 using GatewayService.Models;
 using GatewayService.Utilities;
 using ProductService.Models;
@@ -8,9 +8,9 @@ namespace GatewayService.Controllers
 {
     public class ProductController : Controller
     {
-        private readonly Ecommerce.ProductService.ProductServiceClient _productServiceClient;
+        private readonly ProductServiceGRPC.ProductServiceGRPC.ProductServiceGRPCClient _productServiceClient;
 
-        public ProductController(Ecommerce.ProductService.ProductServiceClient productServiceClient) 
+        public ProductController(ProductServiceGRPC.ProductServiceGRPC.ProductServiceGRPCClient productServiceClient) 
         {
             _productServiceClient = productServiceClient;
         }
@@ -61,7 +61,7 @@ namespace GatewayService.Controllers
 
             string message = response.Message;
 
-            if (response.Status == Ecommerce.Status.Success)
+            if (response.Status == ProductServiceGRPC.Status.Success)
                 return Ok(message);
             else
                 return BadRequest(message);
@@ -82,10 +82,10 @@ namespace GatewayService.Controllers
 
             switch (response.Status)
             {
-                case Ecommerce.Status.Success:
+                case ProductServiceGRPC.Status.Success:
                     return Ok(message);
 
-                case Ecommerce.Status.NotFound:
+                case ProductServiceGRPC.Status.NotFound:
                     return NotFound(message);
 
                 default:
@@ -103,7 +103,7 @@ namespace GatewayService.Controllers
 
             string message = response.Message;
 
-            if (response.Status == Ecommerce.Status.Success)
+            if (response.Status == ProductServiceGRPC.Status.Success)
             {
                 return Ok(message);
             }

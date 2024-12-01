@@ -1,5 +1,4 @@
-﻿using FluentMigrator.Builder.Create.Index;
-using GatewayService.Models;
+﻿using GatewayService.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GatewayService.Controllers

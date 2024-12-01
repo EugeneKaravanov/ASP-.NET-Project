@@ -1,4 +1,4 @@
-﻿using Ecommerce;
+﻿using ProductServiceGRPC;
 using ProductService.Models;
 using Dapper;
 using Npgsql;
@@ -37,8 +37,8 @@ namespace ProductService.Repositories
                 new 
                 {
                     NameFilter = $"%{request.NameFilter}%",
-                    MinPriceFilter = (int)request.MinPriceFilter, 
-                    MaxPriceFilter = (int)request.MaxPriceFilter 
+                    MinPriceFilter = (int?)request.MinPriceFilter, 
+                    MaxPriceFilter = (int?)request.MaxPriceFilter 
                 }, 
                 transaction);
             int elementsOnPageCount = request.ElementsOnPageCount > 0 ? request.ElementsOnPageCount : 1;
@@ -66,8 +66,8 @@ namespace ProductService.Repositories
                 new 
                 { 
                         NameFilter = $"%{request.NameFilter}%", 
-                        MinPriceFilter = (int)request.MinPriceFilter, 
-                        MaxPriceFilter = (int)request.MaxPriceFilter, 
+                        MinPriceFilter = (int?)request.MinPriceFilter, 
+                        MaxPriceFilter = (int?)request.MaxPriceFilter, 
                         SortArgument = request.SortArgument, 
                         SkipCount = elementsOnPageCount * (chosenPageNumber - 1), 
                         Count = elementsOnPageCount
@@ -186,7 +186,7 @@ namespace ProductService.Repositories
                     return result;
                 }
             }
-            catch
+            catch (NpgsqlException ex)
             {
                 result.Status = Models.Status.Failure;
                 result.Message = "Не удалось обновить продукт, так как его имя уже используется!";

@@ -1,12 +1,12 @@
 ﻿syntax = "proto3";
 
-option csharp_namespace = "Ecommerce";
+option csharp_namespace = "ProductServiceGRPC";
 
 import "google/type/money.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
 
-service ProductService 
+service ProductServiceGRPC 
 {
   rpc GetProduct (GetProductRequest) returns (GetProductResponse);
   rpc GetProducts (GetProductsRequest) returns (GetProductsResponse);
@@ -28,7 +28,7 @@ message GetProductsRequest
     google.protobuf.UInt32Value min_price_filter = 4;
     google.protobuf.UInt32Value max_price_filter = 5;
     google.protobuf.StringValue sort_argument = 6;
-    bool is_reverse_sort = 8;
+    bool is_reverse_sort = 7;
 }
 
 message CreateProductRequest 

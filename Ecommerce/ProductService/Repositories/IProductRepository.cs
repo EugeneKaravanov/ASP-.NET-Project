@@ -1,5 +1,5 @@
 ﻿using ProductService.Models;
-using Ecommerce;
+using ProductServiceGRPC;
 
 namespace ProductService.Repositories
 {

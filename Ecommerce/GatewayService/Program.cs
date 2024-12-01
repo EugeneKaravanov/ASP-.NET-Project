@@ -1,10 +1,17 @@
 using GatewayService.Middleware;
 using GatewayService.Filters;
+using ProductServiceGRPC;
+using OrderServiceGRPC;
 
 var builder = WebApplication.CreateBuilder(args);
-var address = builder.Configuration.GetValue<string>("ProductServiceAddress");
+var productServiceadress = builder.Configuration.GetValue<string>("ProductServiceAddress");
+var orderServiceadress = builder.Configuration.GetValue<string>("OrderServiceAddress");
 
-builder.Services.AddGrpcClient<Ecommerce.ProductService.ProductServiceClient>(address, options => { options.Address = new Uri(address); });
+builder.Services.AddGrpcClient<ProductServiceGRPC.ProductServiceGRPC.ProductServiceGRPCClient>(productServiceadress, options => { options.Address = new Uri(productServiceadress); });
+builder.Services.AddGrpcClient<OrderServiceGRPC.OrderServiceGRPC.OrderServiceGRPCClient>(orderServiceadress, options => { options.Address = new Uri(orderServiceadress); });
+
+//builder.Services.AddGrpcClient<Pr>(address, options => { options.Address = new Uri(address); });
+
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<CustomHeaderFilter>();

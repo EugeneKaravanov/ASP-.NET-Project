@@ -1,4 +1,4 @@
-﻿using Ecommerce;
+﻿using ProductServiceGRPC;
 using ProductService.Models;
 
 namespace ProductService.Utilities
@@ -72,18 +72,18 @@ namespace ProductService.Utilities
             return pageGRPC;
         }
 
-        internal static Ecommerce.Status TransferResultStatusToResponseStatus(Models.Status status)
+        internal static ProductServiceGRPC.Status TransferResultStatusToResponseStatus(Models.Status status)
         {
             switch (status)
             {
                 case Models.Status.Success:
-                    return Ecommerce.Status.Success;
+                    return ProductServiceGRPC.Status.Success;
 
                 case Models.Status.NotFound:
-                    return Ecommerce.Status.NotFound;
+                    return ProductServiceGRPC.Status.NotFound;
 
                 default:
-                    return Ecommerce.Status.Failure;
+                    return ProductServiceGRPC.Status.Failure;
             }
         }
     }
