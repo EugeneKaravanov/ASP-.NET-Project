@@ -33,7 +33,7 @@ namespace ProductService.Services
         public override async Task<GetProductResponse> GetProduct(GetProductRequest request, ServerCallContext context)
         {
             GetProductResponse response = new GetProductResponse();
-            ResultWithValue<ProductWithId> result = await _productRepository.GetProduct(request.Id, context.CancellationToken);
+            ResultWithValue<ProductWithId> result = await _productRepository.GetProductAsync(request.Id, context.CancellationToken);
 
             if (result.Status == Models.Status.Success)
             {
@@ -62,7 +62,7 @@ namespace ProductService.Services
 
             if (_productValidator.Validate(product).IsValid)
             {
-                Result result = await _productRepository.CreateProduct(product, context.CancellationToken);
+                Result result = await _productRepository.CreateProductAsync(product, context.CancellationToken);
                 
                 response.Status = Mapper.TransferResultStatusToResponseStatus(result.Status);
                 response.Message = result.Message;
@@ -93,7 +93,7 @@ namespace ProductService.Services
                 return response;
             }
 
-            result = await _productRepository.UpdateProduct(id, product, context.CancellationToken);
+            result = await _productRepository.UpdateProductAsync(id, product, context.CancellationToken);
             response.Status = Mapper.TransferResultStatusToResponseStatus(result.Status);
             response.Message = result.Message;
 
@@ -103,7 +103,7 @@ namespace ProductService.Services
         public override async Task<OperationStatusResponse> DeleteProduct(DeleteProductRequest request, ServerCallContext context)
         {
             OperationStatusResponse response = new OperationStatusResponse();
-            Result result = await _productRepository.DeleteProduct(request.Id, context.CancellationToken);
+            Result result = await _productRepository.DeleteProductAsync(request.Id, context.CancellationToken);
 
             response.Status = Mapper.TransferResultStatusToResponseStatus(result.Status);
             response.Message = result.Message;
