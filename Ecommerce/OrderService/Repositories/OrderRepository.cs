@@ -6,13 +6,11 @@ namespace OrderService.Repositories
 {
     public class OrderRepository : IOrderRepository
     {
-        private readonly string _ordersConnectionString;
-        private readonly string _orderItemsConnectionString;
+        private readonly string _сonnectionString;
 
-        public OrderRepository(string ordersConnectionString, string orderItemsConnectionString)
+        public OrderRepository(string сonnectionString, string orderItemsConnectionString)
         {
-            _ordersConnectionString = ordersConnectionString;
-            _orderItemsConnectionString = orderItemsConnectionString;
+            _сonnectionString = сonnectionString;
         }
 
         public async Task<Result> CreateOrderAsync(Order order, CancellationToken cancellationToken = default)

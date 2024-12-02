@@ -223,12 +223,13 @@ namespace ProductService.Repositories
             }
         }
 
-        public async Task<ResultWithValue<List<OutgoingOrderProduct>>> TakeProducts(List<IncomingOrderProduct> products, CancellationToken cancellationToken = default)
+        public async Task<ResultWithValue<List<OutputOrderProduct>>> TakeProducts(TakeProductsRequest request, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            ResultWithValue<List<OutgoingOrderProduct>> result = new();
-            result.Value = new List<OutgoingOrderProduct>();
+            ResultWithValue<List<OutputOrderProduct>> result = new();
+            List<InputOrderProduct> takingProducts = Mapper.TransferTakeProductsRequestToIncomingOrderProductList(request);
+            result.Value = new List<OutputOrderProduct>();
             using var conection = new NpgsqlConnection(_connectionString);
             string sqlStringForGetProductAndBlockString = @"SELECT * FROM Products
                                                            WHERE id = @Id
@@ -241,7 +242,7 @@ namespace ProductService.Repositories
 
             var transaction = conection.BeginTransaction(System.Data.IsolationLevel.ReadCommitted);
 
-            foreach (IncomingOrderProduct product in products)
+            foreach (InputOrderProduct product in takingProducts)
             {
                 ProductWithId productWithId = await conection.QuerySingleOrDefaultAsync<ProductWithId>(sqlStringForGetProductAndBlockString, new { Id = product.ProductId });
 
@@ -266,7 +267,7 @@ namespace ProductService.Repositories
                 }
 
                 await conection.ExecuteAsync(sqlStringForChangeStockProuct, new { Id = product.ProductId, Quantity = product.Quantity});
-                result.Value.Add(new OutgoingOrderProduct { ProductId = product.ProductId, Quantity = product.Quantity, UnitPrice = productWithId.Price });
+                result.Value.Add(new OutputOrderProduct { ProductId = product.ProductId, Quantity = product.Quantity, UnitPrice = productWithId.Price });
             }
 
             transaction.Commit();

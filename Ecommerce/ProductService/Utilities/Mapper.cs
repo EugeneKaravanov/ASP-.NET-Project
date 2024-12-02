@@ -72,6 +72,47 @@ namespace ProductService.Utilities
             return pageGRPC;
         }
 
+        internal static InputOrderProduct TransferInputTakeProductsGRPCToIncomingOrderProduct(InputTakeProductGRPC inputTakeProductsGRPC)
+        {
+            InputOrderProduct inputOrderProduct = new();
+
+            inputOrderProduct.ProductId = inputTakeProductsGRPC.Id;
+            inputOrderProduct.Quantity = inputTakeProductsGRPC.Quantity;
+
+            return inputOrderProduct;
+        }
+
+        internal static List<InputOrderProduct> TransferTakeProductsRequestToIncomingOrderProductList(TakeProductsRequest request)
+        {
+            List<InputOrderProduct> inputOrderProducts = new();
+
+            foreach (InputTakeProductGRPC product in request.ProductOrders)
+                inputOrderProducts.Add(TransferInputTakeProductsGRPCToIncomingOrderProduct(product));
+
+            return inputOrderProducts;
+        }
+
+        internal static TakeProductsResponse.Types.ProductsReceived TransferListOutputOrderProductToProductsrReceived(List<OutputOrderProduct> orderProducts)
+        {
+            TakeProductsResponse.Types.ProductsReceived productsReceived = new();
+
+            foreach (OutputOrderProduct orderProduct in orderProducts)
+                productsReceived.ProductOrders.Add(TansferOutputOrderProductToOutputTakeProductGRPC(orderProduct));
+
+            return productsReceived;
+        }
+
+        internal static OutputTakeProductGRPC TansferOutputOrderProductToOutputTakeProductGRPC(OutputOrderProduct orderProduct)
+        {
+            OutputTakeProductGRPC outputTakeProductGRPC = new();
+
+            outputTakeProductGRPC.Id = orderProduct.ProductId;
+            outputTakeProductGRPC.Quantity = orderProduct.Quantity;
+            outputTakeProductGRPC.UnitPrice = Converter.ConvertDecimalToMoney(orderProduct.UnitPrice);
+
+            return outputTakeProductGRPC;
+        }
+
         internal static ProductServiceGRPC.Status TransferResultStatusToResponseStatus(Models.Status status)
         {
             switch (status)

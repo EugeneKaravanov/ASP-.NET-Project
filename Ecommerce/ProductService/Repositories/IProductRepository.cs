@@ -10,6 +10,6 @@ namespace ProductService.Repositories
         public Task<Result> CreateProductAsync(Product product, CancellationToken cancellationToken = default);
         public Task<Result> UpdateProductAsync(int id, Product product, CancellationToken cancellationToken = default);
         public Task<Result> DeleteProductAsync(int id, CancellationToken cancellationToken = default);
-        public Task<ResultWithValue<List<OutgoingOrderProduct>>> TakeProducts(List<IncomingOrderProduct> products, CancellationToken cancellationToken = default);
+        public Task<ResultWithValue<List<OutputOrderProduct>>> TakeProducts(TakeProductsRequest request, CancellationToken cancellationToken = default);
     }
 }

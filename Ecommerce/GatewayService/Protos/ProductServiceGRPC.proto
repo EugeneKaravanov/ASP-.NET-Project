@@ -48,7 +48,7 @@ message DeleteProductRequest
 
 message TakeProductsRequest
 {
-    repeated InputTakeProductsGRPC product_orders = 1;
+    repeated InputTakeProductGRPC product_orders = 1;
 }
 
 message GetProductResponse 
@@ -77,9 +77,22 @@ message GetProductsResponse
 
 message TakeProductsResponse
 {
-    repeated OutputTakeProductsGRPC product_orders = 1;
-}
+  oneof result 
+  {
+      ProductsReceived received = 1;
+      ProductsNotReceived not_received = 2;
+  }
 
+  message ProductsReceived
+  {
+      repeated OutputTakeProductGRPC product_orders = 1;
+  }
+
+  message ProductsNotReceived
+  {
+      string message = 1;
+  }
+}
 message OperationStatusResponse 
 {
   Status status = 1;
@@ -104,13 +117,13 @@ message PageGRPC
     repeated ProductGRPC products = 5;
 }
 
-message InputTakeProductsGRPC
+message InputTakeProductGRPC
 {
     int32 id = 1;
     int32 quantity = 2;
 }
 
-message OutputTakeProductsGRPC
+message OutputTakeProductGRPC
 {
     int32 id = 1;
     int32 quantity = 2;

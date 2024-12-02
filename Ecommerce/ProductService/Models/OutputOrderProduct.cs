@@ -1,6 +1,6 @@
 ﻿namespace ProductService.Models
 {
-    public class OutgoingOrderProduct
+    public class OutputOrderProduct
     {
         public int ProductId { get; set; }
         public int Quantity { get; set; }
