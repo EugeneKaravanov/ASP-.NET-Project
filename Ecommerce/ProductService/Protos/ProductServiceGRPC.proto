@@ -12,6 +12,7 @@ service ProductServiceGRPC
   rpc CreateProduct (CreateProductRequest) returns (OperationStatusResponse);
   rpc UpdateProduct (UpdateProductRequest) returns (OperationStatusResponse);
   rpc DeleteProduct (DeleteProductRequest) returns (OperationStatusResponse);
+  rpc TakeProducts (TakeProductsRequest) returns (TakeProductsResponse);
 }
 
 message GetProductRequest 
@@ -45,6 +46,11 @@ message DeleteProductRequest
   int32 id = 1;
 }
 
+message TakeProductsRequest
+{
+    repeated InputTakeProductsGRPC product_orders = 1;
+}
+
 message GetProductResponse 
 {
   oneof result 
@@ -69,6 +75,11 @@ message GetProductsResponse
     PageGRPC page = 1;
 }
 
+message TakeProductsResponse
+{
+    repeated OutputTakeProductsGRPC product_orders = 1;
+}
+
 message OperationStatusResponse 
 {
   Status status = 1;
@@ -91,6 +102,19 @@ message PageGRPC
     int32 choosen_page_number = 3;
     int32 elements_on_page_count = 4;
     repeated ProductGRPC products = 5;
+}
+
+message InputTakeProductsGRPC
+{
+    int32 id = 1;
+    int32 quantity = 2;
+}
+
+message OutputTakeProductsGRPC
+{
+    int32 id = 1;
+    int32 quantity = 2;
+    google.type.Money unit_price = 3;
 }
 
 enum Status 

@@ -166,6 +166,11 @@ namespace ProductService.Repositories
             }
         }
 
+        public Task<ResultWithValue<List<OutgoingOrderProduct>>> TakeProducts(List<IncomingOrderProduct> products, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
         private int GetFiltredProductsCount(string? nameFilter, uint? minPriceFilter, uint? maxPriceFilter)
         {
             int count = _products.

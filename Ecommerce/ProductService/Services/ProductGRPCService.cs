@@ -110,5 +110,12 @@ namespace ProductService.Services
 
             return response;
         }
+
+        public override async Task<TakeProductsResponse> TakeProducts(TakeProductsRequest request, ServerCallContext context)
+        {
+            TakeProductsResponse takeProductsResponse = new();
+
+            return takeProductsResponse;
+        }
     }
 }

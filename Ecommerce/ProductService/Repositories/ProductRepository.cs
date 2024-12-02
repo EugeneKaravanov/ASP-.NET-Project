@@ -4,6 +4,10 @@ using Dapper;
 using Npgsql;
 using ProductService.Utilities;
 using Azure.Core;
+using System.ComponentModel;
+using System.Collections.Specialized;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using System.Collections.Generic;
 
 namespace ProductService.Repositories
 {
@@ -217,6 +221,58 @@ namespace ProductService.Repositories
 
                 return result;
             }
+        }
+
+        public async Task<ResultWithValue<List<OutgoingOrderProduct>>> TakeProducts(List<IncomingOrderProduct> products, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            ResultWithValue<List<OutgoingOrderProduct>> result = new();
+            result.Value = new List<OutgoingOrderProduct>();
+            using var conection = new NpgsqlConnection(_connectionString);
+            string sqlStringForGetProductAndBlockString = @"SELECT * FROM Products
+                                                           WHERE id = @Id
+                                                           FOR UPDATE LIMIT 1;";
+            string sqlStringForChangeStockProuct = @"UPDATE Products 
+                                                    stock = stock - @Quantity
+                                                    WHERE id = @Id;";
+
+            await conection.OpenAsync(cancellationToken);
+
+            var transaction = conection.BeginTransaction(System.Data.IsolationLevel.ReadCommitted);
+
+            foreach (IncomingOrderProduct product in products)
+            {
+                ProductWithId productWithId = await conection.QuerySingleOrDefaultAsync<ProductWithId>(sqlStringForGetProductAndBlockString, new { Id = product.ProductId });
+
+                if (productWithId == null)
+                {
+                    transaction.Rollback();
+                    result.Status = Models.Status.Failure;
+                    result.Message = "Не удалось сформировать заказа, так как некоторые продукты отсустствуют в базе данных!";
+                    result.Value.Clear();
+
+                    return result;
+                }
+
+                if (productWithId.Stock < product.Quantity)
+                {
+                    transaction.Rollback();
+                    result.Status = Models.Status.Failure;
+                    result.Message = "Не удалось сформировать заказа, так как остатков некоторых продуктов недостаточно для формирования заказа!";
+                    result.Value.Clear();
+
+                    return result;
+                }
+
+                await conection.ExecuteAsync(sqlStringForChangeStockProuct, new { Id = product.ProductId, Quantity = product.Quantity});
+                result.Value.Add(new OutgoingOrderProduct { ProductId = product.ProductId, Quantity = product.Quantity, UnitPrice = productWithId.Price });
+            }
+
+            transaction.Commit();
+            result.Status = Models.Status.Success;
+
+            return result;
         }
 
         private string FormSqlStringToGetProductsOnPage(string baseString, string sortArgument, bool isReverseSort)

@@ -1,4 +1,4 @@
-﻿namespace ProductService.Models
+﻿namespace OrderService.Models
 {
     public class ResultWithValue<T>
     {
