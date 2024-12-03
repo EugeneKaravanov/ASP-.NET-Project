@@ -2,7 +2,7 @@
 
 namespace OrderService.Utilities
 {
-    internal class Converter
+    internal class MoneyConverter
     {
         const int NanoСoefficient = 1000000000;
 

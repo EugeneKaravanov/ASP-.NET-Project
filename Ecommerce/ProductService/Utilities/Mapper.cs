@@ -12,7 +12,7 @@ namespace ProductService.Utilities
             productGrpc.Id = id;
             productGrpc.Name = product.Name;
             productGrpc.Description = product.Description;
-            productGrpc.Price = Converter.ConvertDecimalToMoney(product.Price);
+            productGrpc.Price = MoneyConverter.ConvertDecimalToMoney(product.Price);
             productGrpc.Stock = product.Stock;
 
             return productGrpc;
@@ -25,7 +25,7 @@ namespace ProductService.Utilities
             id = productGrpc.Id;
             product.Name = productGrpc.Name;
             product.Description = productGrpc.Description;
-            product.Price = Converter.ConvertMoneyToDecimal(productGrpc.Price);
+            product.Price = MoneyConverter.ConvertMoneyToDecimal(productGrpc.Price);
             product.Stock = productGrpc.Stock;
 
             return product;
@@ -51,7 +51,7 @@ namespace ProductService.Utilities
             productGrpc.Id = productWithId.Id;
             productGrpc.Name = productWithId.Name;
             productGrpc.Description = productWithId.Description;
-            productGrpc.Price = Converter.ConvertDecimalToMoney(productWithId.Price);
+            productGrpc.Price = MoneyConverter.ConvertDecimalToMoney(productWithId.Price);
             productGrpc.Stock = productWithId.Stock;
 
             return productGrpc;
@@ -108,7 +108,7 @@ namespace ProductService.Utilities
 
             outputTakeProductGRPC.Id = orderProduct.ProductId;
             outputTakeProductGRPC.Quantity = orderProduct.Quantity;
-            outputTakeProductGRPC.UnitPrice = Converter.ConvertDecimalToMoney(orderProduct.UnitPrice);
+            outputTakeProductGRPC.UnitPrice = MoneyConverter.ConvertDecimalToMoney(orderProduct.UnitPrice);
 
             return outputTakeProductGRPC;
         }

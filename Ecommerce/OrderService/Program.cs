@@ -3,6 +3,7 @@ using FluentMigrator.Runner;
 using Npgsql;
 using OrderService.Migrations;
 using OrderService.Repositories;
+using OrderService.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -16,10 +17,13 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>(serviceProvider =>
 
     return new OrderRepository(connectionString, productServiceClient);
 });
+
 builder.Services.AddScoped<IDbConnection>(_ =>
 {
     return new NpgsqlConnection(connectionString);
 });
+
+builder.Services.AddScoped<OrderValidator>();
 
 builder.Services.AddFluentMigratorCore()
     .ConfigureRunner(rb => rb

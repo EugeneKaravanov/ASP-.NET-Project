@@ -13,7 +13,7 @@ namespace GatewayService.Utilities
 
             productInfo.Name = productDto.Name;
             productInfo.Description = productDto.Description;
-            productInfo.Price = Converter.ConvertDecimalToMoney(productDto.Price);
+            productInfo.Price = MoneyConverter.ConvertDecimalToMoney(productDto.Price);
             productInfo.Stock = productDto.Stock;
 
             return productInfo;
@@ -26,7 +26,7 @@ namespace GatewayService.Utilities
             productWithIdDto.Id = productGrpc.Id;
             productWithIdDto.Name = productGrpc.Name;
             productWithIdDto.Description = productGrpc.Description;
-            productWithIdDto.Price = Converter.ConvertMoneyToDecimal(productGrpc.Price);
+            productWithIdDto.Price = MoneyConverter.ConvertMoneyToDecimal(productGrpc.Price);
             productWithIdDto.Stock = productGrpc.Stock;
 
             return productWithIdDto;
@@ -39,7 +39,7 @@ namespace GatewayService.Utilities
             productGrpc.Id = id;
             productGrpc.Name = productDto.Name;
             productGrpc.Description = productDto.Description;
-            productGrpc.Price = Converter.ConvertDecimalToMoney(productDto.Price);
+            productGrpc.Price = MoneyConverter.ConvertDecimalToMoney(productDto.Price);
             productGrpc.Stock = productDto.Stock;
 
             return productGrpc;

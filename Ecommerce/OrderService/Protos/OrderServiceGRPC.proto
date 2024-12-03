@@ -12,7 +12,7 @@ service OrderServiceGRPC
   rpc CreateOrder (CreateOrderRequest) returns (OperationStatusResponse);
   rpc GetOrders (google.protobuf.Empty) returns (GerOrdersResponse);
   rpc GetOrder (GetOrderRequest) returns (GetOrderResponse);
-  rpc GerOrdersByCustomer (GerOrderByCustomerRequest) returns (GerOrdersResponse);
+  rpc GerOrdersByCustomer (GerOrderByCustomerRequest) returns (GetOrdersByCustomerResponse);
 }
 
 message CreateOrderRequest
@@ -54,6 +54,25 @@ message GerOrdersResponse
 	repeated OutputOrderGRPC orders = 1;
 }
 
+message GetOrdersByCustomerResponse 
+{
+  oneof result 
+  {
+    OrdersFound found = 1;
+    OrdersNotFound not_found = 2;
+  }
+
+  message OrdersFound 
+  {
+    repeated OutputOrderGRPC orders = 1;
+  }
+
+  message OrdersNotFound 
+  {
+    string message = 1;
+  }
+}
+
 message OperationStatusResponse 
 {
   Status status = 1;
@@ -85,7 +104,7 @@ message OutputOrderItemGRPC
 {
 	int32 product_id = 1;
 	int32 quantity = 2;
-	int32 unit_price = 3;
+	google.type.Money unit_price = 3;
 }
 
 enum Status 

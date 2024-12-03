@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using Dapper;
+﻿using Dapper;
 using Npgsql;
 using OrderService.Models;
 using OrderService.Services;

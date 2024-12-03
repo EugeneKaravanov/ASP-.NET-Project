@@ -2,37 +2,93 @@
 using Grpc.Core;
 using OrderServiceGRPC;
 using OrderService.Repositories;
+using OrderService.Models;
 using static OrderServiceGRPC.OrderServiceGRPC;
+using OperationStatusResponse = OrderServiceGRPC.OperationStatusResponse;
+using ProductServiceGRPC;
+using OrderService.Validators;
 
 namespace OrderService.Services
 {
     public class OrderGRPCService : OrderServiceGRPCBase
     {
         private readonly IOrderRepository _repository;
+        private readonly OrderValidator _validator;
 
-        public OrderGRPCService(IOrderRepository repository)
+        public OrderGRPCService(IOrderRepository repository, OrderValidator validator)
         {
-            IOrderRepository _repository = repository;
+            _repository = repository;
+            _validator = validator;
         }
 
-        public override Task<OperationStatusResponse> CreateOrder(CreateOrderRequest request, ServerCallContext context)
+        public override async Task<OrderServiceGRPC.OperationStatusResponse> CreateOrder(CreateOrderRequest request, ServerCallContext context)
         {
-            return base.CreateOrder(request, context);
+            OperationStatusResponse response = new();
+            InputOrder inputOrder = Mapper.TransferCreateOrderRequestToInputOrder(request);
+
+            if(_validator.Validate(inputOrder).IsValid)
+            {
+                Result result = await _repository.CreateOrderAsync(inputOrder);
+
+                response.Status = Mapper.TransferResultStatusToResponseStatus(result.Status);
+                response.Message = result.Message;
+
+                return response;
+            }
+
+            response.Status = OrderServiceGRPC.Status.Failure;
+            response.Message = "Продукт не прошел валидацию!";
+
+            return response;
         }
 
-        public override Task<GerOrdersResponse> GetOrders(Empty request, ServerCallContext context)
+        public override async Task<GerOrdersResponse> GetOrders(Empty request, ServerCallContext context)
         {
-            return base.GetOrders(request, context);
+            return Mapper.TransferListOutputOrderToGetOrderResponse(await _repository.GetOrdersAsync(context.CancellationToken));
         }
 
-        public override Task<GetOrderResponse> GetOrder(GetOrderRequest request, ServerCallContext context)
+        public override async Task<GetOrderResponse> GetOrder(GetOrderRequest request, ServerCallContext context)
         {
-            return base.GetOrder(request, context);
+            GetOrderResponse getOrderResponse = new();
+            ResultWithValue<OutputOrder> result = await _repository.GetOrderAsync(request.Id, context.CancellationToken);
+
+            if (result.Status == Models.Status.Failure)
+            {
+                GetOrderResponse.Types.OrderNotFound orderNotFound = new();
+
+                orderNotFound.Message = result.Message;
+                getOrderResponse.NotFound = orderNotFound;
+                
+                return getOrderResponse;
+            }
+
+            GetOrderResponse.Types.OrderFound orderFound = new();
+            orderFound.Order = Mapper.TransferOutputOrderToOutputOrderGRPC(result.Value);
+
+            return getOrderResponse;
         }
 
-        public override Task<GerOrdersResponse> GerOrdersByCustomer(GerOrderByCustomerRequest request, ServerCallContext context)
+        public override async Task<GetOrdersByCustomerResponse> GerOrdersByCustomer(GerOrderByCustomerRequest request, ServerCallContext context)
         {
-            return base.GerOrdersByCustomer(request, context);
+            GetOrdersByCustomerResponse getOrdersByCustomerResponse = new();
+            ResultWithValue<List<OutputOrder>> result = await _repository.GetOrdersByCustomerAsync(request.CustomerId, context.CancellationToken);
+
+            if (result.Status == Models.Status.Failure)
+            {
+                GetOrdersByCustomerResponse.Types.OrdersNotFound orderNotFound = new();
+
+                orderNotFound.Message = result.Message;
+                getOrdersByCustomerResponse.NotFound = orderNotFound;
+
+                return getOrdersByCustomerResponse;
+            }
+
+            GetOrdersByCustomerResponse.Types.OrdersFound ordersFound = new();
+            
+            foreach (var order in result.Value)
+                ordersFound.Orders.Add(Mapper.TransferOutputOrderToOutputOrderGRPC(order));
+
+            return getOrdersByCustomerResponse;
         }
     }
 }
