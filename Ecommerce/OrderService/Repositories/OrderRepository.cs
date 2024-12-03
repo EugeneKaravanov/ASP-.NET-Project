@@ -87,7 +87,7 @@ namespace OrderService.Repositories
 
             List<OutputOrder> outputOrders = new();
             string sqlStringForGetAllOrders = "SELECT * FROM Orders";
-            string sqlStringForGetOrderItemsById = "SELECT * FROM OrderItems WHERE id = @Id";
+            string sqlStringForGetOrderItemsByOrderId = "SELECT * FROM OrderItems WHERE id = @Id";
             using var conection = new NpgsqlConnection(_сonnectionString);
 
             await conection.OpenAsync(cancellationToken);
@@ -96,9 +96,9 @@ namespace OrderService.Repositories
             var tempOrders = await conection.QueryAsync<OutputOrder>(sqlStringForGetAllOrders, transaction);
             List<OutputOrder> orders = tempOrders.ToList();
 
-            foreach (OutputOrder order in tempOrders)
+            foreach (OutputOrder order in orders)
             {
-                var tempOrderItems =  await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsById, new { Id = order.Id}, transaction);
+                var tempOrderItems =  await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsByOrderId, new { Id = order.Id}, transaction);
                 order.OrderItems = tempOrderItems.ToList();
             }
 
@@ -109,14 +109,38 @@ namespace OrderService.Repositories
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return null;
+            ResultWithValue<OutputOrder> result = new();
+            string sqlStringForGetOrderById = "SELECT * FROM Orders WHERE id = @Id LIMIT 1";
+            string sqlStringForGetOrderItemsByOrderId = "SELECT * FROM OrderItems WHERE id = @Id";
+            using var conection = new NpgsqlConnection(_сonnectionString);
+
+            await conection.OpenAsync(cancellationToken);
+
+            var transaction = conection.BeginTransaction(System.Data.IsolationLevel.RepeatableRead);
+
+            OutputOrder? order = await conection.QuerySingleOrDefaultAsync<OutputOrder>(sqlStringForGetOrderById, new { Id = id }, transaction);
+
+            if (order == null)
+            {
+                result.Status = Models.Status.Failure;
+                result.Message = $"Заказ с ID {id} отсутствует!";
+
+                return result;
+            }
+
+            var tempOrderItems = await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsByOrderId, new { Id = order.Id }, transaction);
+            order.OrderItems = tempOrderItems.ToList();
+            result.Status = Models.Status.Success;
+
+            return result;
         }
 
-        public async Task<List<OutputOrder>> GetOrdersByCustomerAsync(int customerId, CancellationToken cancellationToken = default)
+        public async Task<ResultWithValue<List<OutputOrder>>> GetOrdersByCustomerAsync(int customerId, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            List<OutputOrder> outputOrders = new();
+            ResultWithValue<List<OutputOrder>> result = new();
+            result.Value = new();
             string sqlStringForGetOrdersByCustomerId = "SELECT * FROM Orders WHERE customerid = @CustomerId";
             string sqlStringForGetOrderItemsById = "SELECT * FROM OrderItems WHERE id = @Id";
             using var conection = new NpgsqlConnection(_сonnectionString);
@@ -127,13 +151,24 @@ namespace OrderService.Repositories
             var tempOrders = await conection.QueryAsync<OutputOrder>(sqlStringForGetOrdersByCustomerId, new { CustomerId = customerId}, transaction);
             List<OutputOrder> orders = tempOrders.ToList();
 
-            foreach (OutputOrder order in tempOrders)
+            if (orders.Count == 0)
+            {
+                result.Status = Models.Status.Failure;
+                result.Message = $"Заказы пользователя {customerId} не найдены!";
+
+                return result;
+            }
+
+            foreach (OutputOrder order in orders)
             {
                 var tempOrderItems = await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsById, new { Id = order.Id }, transaction);
                 order.OrderItems = tempOrderItems.ToList();
             }
 
-            return orders;
+            result.Status = Models.Status.Success;
+            result.Value = orders;
+
+            return result;
         }
     }
 }
