@@ -41,9 +41,9 @@ namespace OrderService.Services
             return orderItems;
         }
 
-        internal static GerOrdersResponse TransferListOutputOrderToGetOrderResponse(List<OutputOrder> outputOrders)
+        internal static GetOrdersResponse TransferListOutputOrderToGetOrderResponse(List<OutputOrder> outputOrders)
         {
-            GerOrdersResponse getOrdersResponse = new();
+            GetOrdersResponse getOrdersResponse = new();
 
             foreach (OutputOrder outputOrder in outputOrders)
                 getOrdersResponse.Orders.Add(TransferOutputOrderToOutputOrderGRPC(outputOrder));
@@ -80,6 +80,7 @@ namespace OrderService.Services
         internal static InputOrder TransferCreateOrderRequestToInputOrder(CreateOrderRequest createOrderRequest)
         {
             InputOrder inputOrder = new();
+            inputOrder.OrderItems = new();
 
             inputOrder.CustomerId = createOrderRequest.Order.CustomerId;
 

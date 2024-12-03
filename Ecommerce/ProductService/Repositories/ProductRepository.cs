@@ -234,7 +234,7 @@ namespace ProductService.Repositories
             string sqlStringForGetProductAndBlockString = @"SELECT * FROM Products
                                                            WHERE id = @Id
                                                            FOR UPDATE LIMIT 1;";
-            string sqlStringForChangeStockProuct = @"UPDATE Products 
+            string sqlStringForChangeStockProuct = @"UPDATE Products SET
                                                     stock = stock - @Quantity
                                                     WHERE id = @Id;";
 

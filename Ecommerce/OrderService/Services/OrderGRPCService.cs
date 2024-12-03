@@ -42,7 +42,7 @@ namespace OrderService.Services
             return response;
         }
 
-        public override async Task<GerOrdersResponse> GetOrders(Empty request, ServerCallContext context)
+        public override async Task<GetOrdersResponse> GetOrders(Empty request, ServerCallContext context)
         {
             return Mapper.TransferListOutputOrderToGetOrderResponse(await _repository.GetOrdersAsync(context.CancellationToken));
         }
@@ -68,7 +68,7 @@ namespace OrderService.Services
             return getOrderResponse;
         }
 
-        public override async Task<GetOrdersByCustomerResponse> GerOrdersByCustomer(GerOrderByCustomerRequest request, ServerCallContext context)
+        public override async Task<GetOrdersByCustomerResponse> GerOrdersByCustomer(GetOrderByCustomerRequest request, ServerCallContext context)
         {
             GetOrdersByCustomerResponse getOrdersByCustomerResponse = new();
             ResultWithValue<List<OutputOrder>> result = await _repository.GetOrdersByCustomerAsync(request.CustomerId, context.CancellationToken);

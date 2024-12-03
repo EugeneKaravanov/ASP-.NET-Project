@@ -2,6 +2,7 @@
 using GatewayService.Models;
 using ProductService.Models;
 using ProductService;
+using OrderServiceGRPC;
 
 namespace GatewayService.Utilities
 {
@@ -75,6 +76,76 @@ namespace GatewayService.Utilities
                 pageDto.Products.Add(TransferProductGRPCToProdutctWithIdDto(productWithIdGRPC));
 
             return pageDto;
+        }
+
+        internal static OutputOrderDto TransferOutputOrderGRPCToOutputOrderDto(OutputOrderGRPC outputOrderGRPC)
+        {
+            OutputOrderDto outputOrderDto = new();
+
+            outputOrderDto.Id = outputOrderGRPC.Id;
+            outputOrderDto.CustomerId = outputOrderGRPC.CustomerId;
+            outputOrderDto.OrderDate = outputOrderGRPC.DateTime.ToDateTime();
+            outputOrderDto.TotalAmount = MoneyConverter.ConvertMoneyToDecimal(outputOrderGRPC.TotalAmount);
+
+            foreach (OutputOrderItemGRPC outputOrderItemGRPC in outputOrderGRPC.Items)
+                outputOrderDto.OrderItems.Add(TransferOutputOrderItemGRPCToOutputOrderItemDto(outputOrderItemGRPC));
+
+            return outputOrderDto;
+        }
+
+        internal static OutputOrderItemDto TransferOutputOrderItemGRPCToOutputOrderItemDto(OutputOrderItemGRPC outputOrderItemGRPC)
+        {
+            OutputOrderItemDto outputOrderItemDto = new();
+
+            outputOrderItemDto.ProductId = outputOrderItemGRPC.ProductId;
+            outputOrderItemDto.Quantity = outputOrderItemGRPC.Quantity;
+            outputOrderItemDto.UnitPrice = MoneyConverter.ConvertMoneyToDecimal(outputOrderItemGRPC.UnitPrice);
+
+            return outputOrderItemDto;
+        }
+
+        internal static List<OutputOrderDto> TransferGetOrdersByCustomerResponseToListOutputOrderDto(GetOrdersByCustomerResponse getOrdersByCustomerResponse)
+        {
+            List<OutputOrderDto> orders = new();
+
+            foreach (OutputOrderGRPC orderGRPC in getOrdersByCustomerResponse.Found.Orders)
+                orders.Add(TransferOutputOrderGRPCToOutputOrderDto(orderGRPC));
+
+            return orders;
+        }
+
+        internal static List<OutputOrderDto> TransferGetOrdersResponseToListOutputOrderDto(GetOrdersResponse getOrdersResponse)
+        {
+            List<OutputOrderDto> orders = new();
+
+            foreach (OutputOrderGRPC orderGRPC in getOrdersResponse.Orders)
+                orders.Add(TransferOutputOrderGRPCToOutputOrderDto(orderGRPC));
+
+            return orders;
+        }
+
+        internal static CreateOrderRequest TransferInputOrderDtoToCreateOrderRequest(InputOrderDto inputOrderDto)
+        {
+            CreateOrderRequest request = new();
+            request.Order = new();
+
+            request.Order.CustomerId = inputOrderDto.CustomerId;
+            
+            foreach (InputOrderItemDto inputOrderItemDto in inputOrderDto.OrderItems)
+                request.Order.Items.Add(TransferInputOrderItemDtoToInputOrderItemGRPC(inputOrderItemDto));
+
+            return request;
+        }
+
+        internal static InputOrderItemGRPC TransferInputOrderItemDtoToInputOrderItemGRPC(InputOrderItemDto inputOrderItemDto)
+        {
+
+            InputOrderItemGRPC inputOrderItemGRPC = new();
+
+            inputOrderItemGRPC.ProductId = inputOrderItemDto.ProductId;
+            inputOrderItemGRPC.Quantity = inputOrderItemDto.Quantity;
+
+            return inputOrderItemGRPC;
         }
     }
 }

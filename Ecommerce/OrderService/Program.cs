@@ -3,6 +3,7 @@ using FluentMigrator.Runner;
 using Npgsql;
 using OrderService.Migrations;
 using OrderService.Repositories;
+using OrderService.Services;
 using OrderService.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,9 +31,11 @@ builder.Services.AddFluentMigratorCore()
         .AddPostgres()
         .WithGlobalConnectionString(builder.Configuration.GetConnectionString("DefaultConnection"))
         .ScanIn(typeof(InitialMigrationForOrders).Assembly).For.Migrations());
+builder.Services.AddGrpc();
 
 var app = builder.Build();
 
+app.MapGrpcService<OrderGRPCService>();
 using (var scope = app.Services.CreateScope())
 {
     var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
