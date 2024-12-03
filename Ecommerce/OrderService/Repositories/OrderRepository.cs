@@ -48,6 +48,9 @@ namespace OrderService.Repositories
                                                     )
                                                     SELECT id FROM insert_result";
 
+            string sqlStringForInsertOrderItemInOrderItems = @"INSERT INTO OrderItems (orderid, productid, quantity, unitprice)
+                                                                VALUES (@OrderId, @ProductId, @Quantity, @UnitPrice)";
+
             using var conection = new NpgsqlConnection(_сonnectionString);
 
             await conection.OpenAsync(cancellationToken);
@@ -61,7 +64,21 @@ namespace OrderService.Repositories
                 Totalammount = totalAmount,
             });
 
+            foreach (var item in orderItems)
+                await conection.ExecuteAsync(sqlStringForInsertOrderItemInOrderItems, new
+                {
+                    OrderId = orderId,
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice
+                });
 
+            transaction.Commit();
+
+            result.Status = Models.Status.Success;
+            result.Message = "Заказ успешно сформирован!";
+
+            return result;
         }
 
         public async Task<List<OutputOrder>> GetOrdersAsync(CancellationToken cancellationToken = default)

@@ -12,8 +12,6 @@ service OrderServiceGRPC
   rpc CreateOrder (CreateOrderRequest) returns (OperationStatusResponse);
   rpc GetOrders (google.protobuf.Empty) returns (GerOrdersResponse);
   rpc GetOrder (GetOrderRequest) returns (GetOrderResponse);
-  rpc UpdateOrder (UpdateOrderRequest) returns (OperationStatusResponse);
-  rpc DeleteOrder (DeleteOrderRequest) returns (OperationStatusResponse);
   rpc GerOrdersByCustomer (GerOrderByCustomerRequest) returns (GerOrdersResponse);
 }
 
@@ -23,17 +21,6 @@ message CreateOrderRequest
 }
 
 message GetOrderRequest
-{
-	int32 id = 1;
-}
-
-message UpdateOrderRequest
-{
-	int32 id = 1;
-	InputOrderGRPC order = 2;
-}
-
-message DeleteOrderRequest
 {
 	int32 id = 1;
 }
