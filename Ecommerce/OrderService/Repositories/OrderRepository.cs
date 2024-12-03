@@ -1,40 +1,84 @@
-﻿using Dapper;
+﻿using Azure.Core;
+using Dapper;
 using Npgsql;
 using OrderService.Models;
+using OrderService.Services;
+using ProductServiceGRPC;
 
 namespace OrderService.Repositories
 {
     public class OrderRepository : IOrderRepository
     {
         private readonly string _сonnectionString;
+        private readonly ProductServiceGRPC.ProductServiceGRPC.ProductServiceGRPCClient _productServiceClient;
 
-        public OrderRepository(string сonnectionString, string orderItemsConnectionString)
+        public OrderRepository(string сonnectionString, ProductServiceGRPC.ProductServiceGRPC.ProductServiceGRPCClient productServiceClient)
         {
             _сonnectionString = сonnectionString;
+            _productServiceClient = productServiceClient;
         }
 
-        public async Task<Result> CreateOrderAsync(Order order, CancellationToken cancellationToken = default)
+        public async Task<Result> CreateOrderAsync(InputOrder order, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            Result result = new();
+            TakeProductsRequest request = Mapper.TransferListInputOrderItemToTakeProductsRequest(order.OrderItems);
+            TakeProductsResponse response = await _productServiceClient.TakeProductsAsync(request, cancellationToken: cancellationToken);
+
+            if (response.ResultCase == TakeProductsResponse.ResultOneofCase.NotReceived)
+            {
+                result.Status = Models.Status.Failure;
+                result.Message = response.NotReceived.Message;
+
+                return result;
+            }
+
+            List<OutputOrderItem> orderItems = Mapper.TransferTakeProductResponseToListOutputOrderItem(response);
+            decimal totalAmount = 0;
+
+            foreach (OutputOrderItem item in orderItems)
+                totalAmount += item.UnitPrice;
+
+            string sqlStrinForInsertOrderInOrders = @"WITH insert_result AS 
+                                                    (
+                                                        INSERT INTO Orders (customerid, orderdate, totalammount)
+                                                        VALUES (@Customerid, @Orderdate, @Totalammount)
+                                                        RETURNING id
+                                                    )
+                                                    SELECT id FROM insert_result";
+
+            using var conection = new NpgsqlConnection(_сonnectionString);
+
+            await conection.OpenAsync(cancellationToken);
+
+            var transaction = conection.BeginTransaction(System.Data.IsolationLevel.ReadCommitted);
+
+            int orderId = await conection.QuerySingleAsync<int>(sqlStrinForInsertOrderInOrders, new
+            {
+                CustomerId = order.CustomerId,
+                Orderdate = DateTime.Now,
+                Totalammount = totalAmount,
+            });
+
+
+        }
+
+        public async Task<List<OutputOrder>> GetOrdersAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             return null;
         }
 
-        public async Task<List<Order>> GetOrdersAsync(CancellationToken cancellationToken = default)
+        public async Task<ResultWithValue<OutputOrder>> GetOrderAsync(int id, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             return null;
         }
 
-        public async Task<ResultWithValue<Order>> GetOrderAsync(int id, CancellationToken cancellationToken = default)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            return null;
-        }
-
-        public async Task<List<Order>> GetOrdersByCustomerAsync(int customerId, CancellationToken cancellationToken = default)
+        public async Task<List<OutputOrder>> GetOrdersByCustomerAsync(int customerId, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 

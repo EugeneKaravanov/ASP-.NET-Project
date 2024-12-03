@@ -1,6 +1,6 @@
-﻿namespace GatewayService.Models
+﻿namespace OrderService.Models
 {
-    public class IncomingOrderItemDto
+    public class InputOrderItem
     {
         public int ProductId { get; set; }
         public int Quantity { get; set; }

@@ -1,7 +1,5 @@
 using GatewayService.Middleware;
 using GatewayService.Filters;
-using ProductServiceGRPC;
-using OrderServiceGRPC;
 
 var builder = WebApplication.CreateBuilder(args);
 var productServiceadress = builder.Configuration.GetValue<string>("ProductServiceAddress");
@@ -9,8 +7,6 @@ var orderServiceadress = builder.Configuration.GetValue<string>("OrderServiceAdd
 
 builder.Services.AddGrpcClient<ProductServiceGRPC.ProductServiceGRPC.ProductServiceGRPCClient>(productServiceadress, options => { options.Address = new Uri(productServiceadress); });
 builder.Services.AddGrpcClient<OrderServiceGRPC.OrderServiceGRPC.OrderServiceGRPCClient>(orderServiceadress, options => { options.Address = new Uri(orderServiceadress); });
-
-//builder.Services.AddGrpcClient<Pr>(address, options => { options.Address = new Uri(address); });
 
 builder.Services.AddControllers(options =>
 {

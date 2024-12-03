@@ -1,6 +1,6 @@
 ﻿namespace GatewayService.Models
 {
-    public class OutgoingOrderDto
+    public class OutputOrderDto
     {
         public int Id { get; set; }
         public int CustomerId { get; set; }
