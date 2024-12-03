@@ -3,17 +3,13 @@ using OrderService.Models;
 
 namespace OrderService.Validators
 {
-    public class OrderValidator : AbstractValidator<>
+    public class OrderValidator : AbstractValidator<InputOrder>
     {
-        private readonly int maxNameLength = 100;
-        private readonly int minPrice = 0;
-        private readonly int minStock = 0;
-
-        public OrderValidator() 
+        private readonly int minOrderItems = 1;
+        public OrderValidator()
         {
-            RuleFor(product => product.Name).NotEmpty().MaximumLength(maxNameLength);
-            RuleFor(product => product.Price).GreaterThan(minPrice);
-            RuleFor(product => product.Stock).GreaterThanOrEqualTo(minStock);
+            RuleFor(order => order.CustomerId).NotEmpty();
+            RuleFor(order => order.OrderItems.Count).GreaterThanOrEqualTo(minOrderItems);
         }
     }
 }

@@ -85,7 +85,24 @@ namespace OrderService.Repositories
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return null;
+            List<OutputOrder> outputOrders = new();
+            string sqlStringForGetAllOrders = "SELECT * FROM Orders";
+            string sqlStringForGetOrderItemsById = "SELECT * FROM OrderItems WHERE id = @Id";
+            using var conection = new NpgsqlConnection(_сonnectionString);
+
+            await conection.OpenAsync(cancellationToken);
+
+            var transaction = conection.BeginTransaction(System.Data.IsolationLevel.RepeatableRead);
+            var tempOrders = await conection.QueryAsync<OutputOrder>(sqlStringForGetAllOrders, transaction);
+            List<OutputOrder> orders = tempOrders.ToList();
+
+            foreach (OutputOrder order in tempOrders)
+            {
+                var tempOrderItems =  await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsById, new { Id = order.Id}, transaction);
+                order.OrderItems = tempOrderItems.ToList();
+            }
+
+            return orders;
         }
 
         public async Task<ResultWithValue<OutputOrder>> GetOrderAsync(int id, CancellationToken cancellationToken = default)
@@ -99,7 +116,24 @@ namespace OrderService.Repositories
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return null;
+            List<OutputOrder> outputOrders = new();
+            string sqlStringForGetOrdersByCustomerId = "SELECT * FROM Orders WHERE customerid = @CustomerId";
+            string sqlStringForGetOrderItemsById = "SELECT * FROM OrderItems WHERE id = @Id";
+            using var conection = new NpgsqlConnection(_сonnectionString);
+
+            await conection.OpenAsync(cancellationToken);
+
+            var transaction = conection.BeginTransaction(System.Data.IsolationLevel.RepeatableRead);
+            var tempOrders = await conection.QueryAsync<OutputOrder>(sqlStringForGetOrdersByCustomerId, new { CustomerId = customerId}, transaction);
+            List<OutputOrder> orders = tempOrders.ToList();
+
+            foreach (OutputOrder order in tempOrders)
+            {
+                var tempOrderItems = await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsById, new { Id = order.Id }, transaction);
+                order.OrderItems = tempOrderItems.ToList();
+            }
+
+            return orders;
         }
     }
 }
