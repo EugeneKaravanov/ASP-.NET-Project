@@ -37,14 +37,14 @@ namespace OrderService.Services
             }
 
             response.Status = OrderServiceGRPC.Status.Failure;
-            response.Message = "Продукт не прошел валидацию!";
+            response.Message = "Заказ не прошел валидацию!";
 
             return response;
         }
 
         public override async Task<GetOrdersResponse> GetOrders(Empty request, ServerCallContext context)
         {
-            return Mapper.TransferListOutputOrderToGetOrderResponse(await _repository.GetOrdersAsync(context.CancellationToken));
+            return Mapper.TransferListOutputOrderToGetOrdersResponse(await _repository.GetOrdersAsync(context.CancellationToken));
         }
 
         public override async Task<GetOrderResponse> GetOrder(GetOrderRequest request, ServerCallContext context)
@@ -64,6 +64,7 @@ namespace OrderService.Services
 
             GetOrderResponse.Types.OrderFound orderFound = new();
             orderFound.Order = Mapper.TransferOutputOrderToOutputOrderGRPC(result.Value);
+            getOrderResponse.Found = orderFound;
 
             return getOrderResponse;
         }
@@ -87,6 +88,8 @@ namespace OrderService.Services
             
             foreach (var order in result.Value)
                 ordersFound.Orders.Add(Mapper.TransferOutputOrderToOutputOrderGRPC(order));
+
+            getOrdersByCustomerResponse.Found = ordersFound;
 
             return getOrdersByCustomerResponse;
         }

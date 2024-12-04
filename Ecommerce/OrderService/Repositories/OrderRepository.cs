@@ -37,11 +37,11 @@ namespace OrderService.Repositories
             decimal totalAmount = 0;
 
             foreach (OutputOrderItem item in orderItems)
-                totalAmount += item.UnitPrice;
+                totalAmount += item.UnitPrice * item.Quantity;
 
             string sqlStrinForInsertOrderInOrders = @"WITH insert_result AS 
                                                     (
-                                                        INSERT INTO Orders (customerid, orderdate, totalammount)
+                                                        INSERT INTO Orders (customerid, orderdate, totalamount)
                                                         VALUES (@Customerid, @Orderdate, @Totalammount)
                                                         RETURNING id
                                                     )
@@ -86,7 +86,7 @@ namespace OrderService.Repositories
 
             List<OutputOrder> outputOrders = new();
             string sqlStringForGetAllOrders = "SELECT * FROM Orders";
-            string sqlStringForGetOrderItemsByOrderId = "SELECT * FROM OrderItems WHERE id = @Id";
+            string sqlStringForGetOrderItemsByOrderId = "SELECT * FROM OrderItems WHERE orderid = @OrderId";
             using var conection = new NpgsqlConnection(_сonnectionString);
 
             await conection.OpenAsync(cancellationToken);
@@ -97,7 +97,7 @@ namespace OrderService.Repositories
 
             foreach (OutputOrder order in orders)
             {
-                var tempOrderItems =  await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsByOrderId, new { Id = order.Id}, transaction);
+                var tempOrderItems =  await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsByOrderId, new { OrderId = order.Id}, transaction);
                 order.OrderItems = tempOrderItems.ToList();
             }
 
@@ -110,7 +110,7 @@ namespace OrderService.Repositories
 
             ResultWithValue<OutputOrder> result = new();
             string sqlStringForGetOrderById = "SELECT * FROM Orders WHERE id = @Id LIMIT 1";
-            string sqlStringForGetOrderItemsByOrderId = "SELECT * FROM OrderItems WHERE id = @Id";
+            string sqlStringForGetOrderItemsByOrderId = "SELECT * FROM OrderItems WHERE orderid = @OrderId";
             using var conection = new NpgsqlConnection(_сonnectionString);
 
             await conection.OpenAsync(cancellationToken);
@@ -127,9 +127,10 @@ namespace OrderService.Repositories
                 return result;
             }
 
-            var tempOrderItems = await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsByOrderId, new { Id = order.Id }, transaction);
+            var tempOrderItems = await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsByOrderId, new { OrderId = order.Id }, transaction);
             order.OrderItems = tempOrderItems.ToList();
             result.Status = Models.Status.Success;
+            result.Value = order;
 
             return result;
         }
@@ -141,7 +142,7 @@ namespace OrderService.Repositories
             ResultWithValue<List<OutputOrder>> result = new();
             result.Value = new();
             string sqlStringForGetOrdersByCustomerId = "SELECT * FROM Orders WHERE customerid = @CustomerId";
-            string sqlStringForGetOrderItemsById = "SELECT * FROM OrderItems WHERE id = @Id";
+            string sqlStringForGetOrderItemsById = "SELECT * FROM OrderItems WHERE orderid = @OrderId";
             using var conection = new NpgsqlConnection(_сonnectionString);
 
             await conection.OpenAsync(cancellationToken);
@@ -160,7 +161,7 @@ namespace OrderService.Repositories
 
             foreach (OutputOrder order in orders)
             {
-                var tempOrderItems = await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsById, new { Id = order.Id }, transaction);
+                var tempOrderItems = await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsById, new { OrderId = order.Id }, transaction);
                 order.OrderItems = tempOrderItems.ToList();
             }
 

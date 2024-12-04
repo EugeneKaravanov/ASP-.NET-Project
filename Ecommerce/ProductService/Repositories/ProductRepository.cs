@@ -61,8 +61,7 @@ namespace ProductService.Repositories
                 { 
                         NameFilter = $"%{request.NameFilter}%", 
                         MinPriceFilter = (int?)request.MinPriceFilter, 
-                        MaxPriceFilter = (int?)request.MaxPriceFilter, 
-                        SortArgument = request.SortArgument, 
+                        MaxPriceFilter = (int?)request.MaxPriceFilter,
                         SkipCount = elementsOnPageCount * (chosenPageNumber - 1), 
                         Count = elementsOnPageCount
                 }, 
@@ -285,9 +284,9 @@ namespace ProductService.Repositories
             else
             {
                 if (isReverseSort == false)
-                    return baseString + @"SELECT * FROM filtred_products ORDER BY @SortArgument OFFSET @SkipCount LIMIT @Count;";
+                    return baseString + $"SELECT * FROM filtred_products ORDER BY {sortArgument} OFFSET @SkipCount LIMIT @Count;";
                 else
-                    return baseString + @"SELECT * FROM filtred_products ORDER BY @SortArgument DESC OFFSET @SkipCount LIMIT @Count;";
+                    return baseString + $"SELECT * FROM filtred_products ORDER BY {sortArgument} DESC OFFSET @SkipCount LIMIT @Count;";
             }
         }
     }

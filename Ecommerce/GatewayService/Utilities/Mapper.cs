@@ -81,6 +81,7 @@ namespace GatewayService.Utilities
         internal static OutputOrderDto TransferOutputOrderGRPCToOutputOrderDto(OutputOrderGRPC outputOrderGRPC)
         {
             OutputOrderDto outputOrderDto = new();
+            outputOrderDto.OrderItems = new();
 
             outputOrderDto.Id = outputOrderGRPC.Id;
             outputOrderDto.CustomerId = outputOrderGRPC.CustomerId;

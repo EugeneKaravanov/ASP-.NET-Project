@@ -41,7 +41,7 @@ namespace OrderService.Services
             return orderItems;
         }
 
-        internal static GetOrdersResponse TransferListOutputOrderToGetOrderResponse(List<OutputOrder> outputOrders)
+        internal static GetOrdersResponse TransferListOutputOrderToGetOrdersResponse(List<OutputOrder> outputOrders)
         {
             GetOrdersResponse getOrdersResponse = new();
 
