@@ -13,7 +13,7 @@ var productServiceadress = builder.Configuration.GetValue<string>("ProductServic
 builder.Services.AddGrpcClient<ProductServiceGRPC.ProductServiceGRPC.ProductServiceGRPCClient>(productServiceadress, options => { options.Address = new Uri(productServiceadress); });
 builder.Services.AddScoped<IOrderRepository, OrderRepository>(serviceProvider =>
 {
-    var tempConectionString = connectionString;
+    var tempConnectionString = connectionString;
     var productServiceClient = serviceProvider.GetRequiredService<ProductServiceGRPC.ProductServiceGRPC.ProductServiceGRPCClient>();
 
     return new OrderRepository(connectionString, productServiceClient);

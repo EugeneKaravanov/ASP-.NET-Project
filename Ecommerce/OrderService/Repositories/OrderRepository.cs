@@ -19,8 +19,6 @@ namespace OrderService.Repositories
 
         public async Task<Result> CreateOrderAsync(InputOrder order, CancellationToken cancellationToken = default)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
             Result result = new();
             TakeProductsRequest request = Mapper.TransferListInputOrderItemToTakeProductsRequest(order.OrderItems);
             TakeProductsResponse response = await _productServiceClient.TakeProductsAsync(request, cancellationToken: cancellationToken);
@@ -42,7 +40,7 @@ namespace OrderService.Repositories
             string sqlStrinForInsertOrderInOrders = @"WITH insert_result AS 
                                                     (
                                                         INSERT INTO Orders (customerid, orderdate, totalamount)
-                                                        VALUES (@Customerid, @Orderdate, @Totalammount)
+                                                        VALUES (@Customerid, @Orderdate, @Totalamount)
                                                         RETURNING id
                                                     )
                                                     SELECT id FROM insert_result";
@@ -50,29 +48,25 @@ namespace OrderService.Repositories
             string sqlStringForInsertOrderItemInOrderItems = @"INSERT INTO OrderItems (orderid, productid, quantity, unitprice)
                                                                 VALUES (@OrderId, @ProductId, @Quantity, @UnitPrice)";
 
-            using var conection = new NpgsqlConnection(_сonnectionString);
+            await using var connection = new NpgsqlConnection(_сonnectionString);
 
-            await conection.OpenAsync(cancellationToken);
+            await connection.OpenAsync();
 
-            var transaction = conection.BeginTransaction(System.Data.IsolationLevel.ReadCommitted);
-
-            int orderId = await conection.QuerySingleAsync<int>(sqlStrinForInsertOrderInOrders, new
+            int orderId = await connection.QuerySingleAsync<int>(sqlStrinForInsertOrderInOrders, new
             {
                 CustomerId = order.CustomerId,
                 Orderdate = DateTime.Now,
-                Totalammount = totalAmount,
+                Totalamount = totalAmount,
             });
 
             foreach (var item in orderItems)
-                await conection.ExecuteAsync(sqlStringForInsertOrderItemInOrderItems, new
+                await connection.ExecuteAsync(sqlStringForInsertOrderItemInOrderItems, new
                 {
                     OrderId = orderId,
                     ProductId = item.ProductId,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice
                 });
-
-            transaction.Commit();
 
             result.Status = Models.Status.Success;
             result.Message = "Заказ успешно сформирован!";
@@ -82,22 +76,19 @@ namespace OrderService.Repositories
 
         public async Task<List<OutputOrder>> GetOrdersAsync(CancellationToken cancellationToken = default)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
             List<OutputOrder> outputOrders = new();
             string sqlStringForGetAllOrders = "SELECT * FROM Orders";
             string sqlStringForGetOrderItemsByOrderId = "SELECT * FROM OrderItems WHERE orderid = @OrderId";
-            using var conection = new NpgsqlConnection(_сonnectionString);
+            await using var connection = new NpgsqlConnection(_сonnectionString);
 
-            await conection.OpenAsync(cancellationToken);
+            await connection.OpenAsync(cancellationToken);
 
-            var transaction = conection.BeginTransaction(System.Data.IsolationLevel.RepeatableRead);
-            var tempOrders = await conection.QueryAsync<OutputOrder>(sqlStringForGetAllOrders, transaction);
+            var tempOrders = await connection.QueryAsync<OutputOrder>(sqlStringForGetAllOrders);
             List<OutputOrder> orders = tempOrders.ToList();
 
             foreach (OutputOrder order in orders)
             {
-                var tempOrderItems =  await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsByOrderId, new { OrderId = order.Id}, transaction);
+                var tempOrderItems =  await connection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsByOrderId, new { OrderId = order.Id});
                 order.OrderItems = tempOrderItems.ToList();
             }
 
@@ -106,18 +97,14 @@ namespace OrderService.Repositories
 
         public async Task<ResultWithValue<OutputOrder>> GetOrderAsync(int id, CancellationToken cancellationToken = default)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
             ResultWithValue<OutputOrder> result = new();
             string sqlStringForGetOrderById = "SELECT * FROM Orders WHERE id = @Id LIMIT 1";
             string sqlStringForGetOrderItemsByOrderId = "SELECT * FROM OrderItems WHERE orderid = @OrderId";
-            using var conection = new NpgsqlConnection(_сonnectionString);
+            await using var connection = new NpgsqlConnection(_сonnectionString);
 
-            await conection.OpenAsync(cancellationToken);
+            await connection.OpenAsync(cancellationToken);
 
-            var transaction = conection.BeginTransaction(System.Data.IsolationLevel.RepeatableRead);
-
-            OutputOrder? order = await conection.QuerySingleOrDefaultAsync<OutputOrder>(sqlStringForGetOrderById, new { Id = id }, transaction);
+            OutputOrder? order = await connection.QuerySingleOrDefaultAsync<OutputOrder>(sqlStringForGetOrderById, new { Id = id });
 
             if (order == null)
             {
@@ -127,7 +114,7 @@ namespace OrderService.Repositories
                 return result;
             }
 
-            var tempOrderItems = await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsByOrderId, new { OrderId = order.Id }, transaction);
+            var tempOrderItems = await connection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsByOrderId, new { OrderId = order.Id });
             order.OrderItems = tempOrderItems.ToList();
             result.Status = Models.Status.Success;
             result.Value = order;
@@ -137,18 +124,14 @@ namespace OrderService.Repositories
 
         public async Task<ResultWithValue<List<OutputOrder>>> GetOrdersByCustomerAsync(int customerId, CancellationToken cancellationToken = default)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
             ResultWithValue<List<OutputOrder>> result = new();
             result.Value = new();
             string sqlStringForGetOrdersByCustomerId = "SELECT * FROM Orders WHERE customerid = @CustomerId";
             string sqlStringForGetOrderItemsById = "SELECT * FROM OrderItems WHERE orderid = @OrderId";
-            using var conection = new NpgsqlConnection(_сonnectionString);
+            await using var connection = new NpgsqlConnection(_сonnectionString);
 
-            await conection.OpenAsync(cancellationToken);
-
-            var transaction = conection.BeginTransaction(System.Data.IsolationLevel.RepeatableRead);
-            var tempOrders = await conection.QueryAsync<OutputOrder>(sqlStringForGetOrdersByCustomerId, new { CustomerId = customerId}, transaction);
+            await connection.OpenAsync(cancellationToken);
+            var tempOrders = await connection.QueryAsync<OutputOrder>(sqlStringForGetOrdersByCustomerId, new { CustomerId = customerId});
             List<OutputOrder> orders = tempOrders.ToList();
 
             if (orders.Count == 0)
@@ -161,7 +144,7 @@ namespace OrderService.Repositories
 
             foreach (OutputOrder order in orders)
             {
-                var tempOrderItems = await conection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsById, new { OrderId = order.Id }, transaction);
+                var tempOrderItems = await connection.QueryAsync<OutputOrderItem>(sqlStringForGetOrderItemsById, new { OrderId = order.Id });
                 order.OrderItems = tempOrderItems.ToList();
             }
 
